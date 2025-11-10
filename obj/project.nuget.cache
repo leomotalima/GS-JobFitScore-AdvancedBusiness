@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "kssTS5wluFg=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI\\JobFitScoreAPI.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\leom\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.0-preview.3.25172.1\\microsoft.aspnetcore.openapi.10.0.0-preview.3.25172.1.nupkg.sha512",
+    "C:\\Users\\leom\\.nuget\\packages\\microsoft.openapi\\2.0.0-preview.11\\microsoft.openapi.2.0.0-preview.11.nupkg.sha512"
+  ],
+  "logs": []
+}
