@@ -1,29 +1,35 @@
+<h1 align="center">
+  <img src="https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness/blob/main/Static/images/logo.png?raw=true" alt="JobFitScore Logo" width="220"/>
+  <br><br>
+  <b>JobFitScore – Global Solution</b>
+</h1>
 
-<div align="center">
-  <img src="https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness/blob/main/Static/images/logo.png?raw=true" alt="JobFitScore Logo" width="200"/>
-</div>
-
-  <h1><i><b>JobFitScore</b></i> - Global Solution</h1>
-  <p><b>Disciplina:</b> Advanced Business Development with .NET</p>
-  <p><b>Professor Orientador:</b> Leonardo Gasparini Romão</p>
-  <p>API RESTful desenvolvida em <b>.NET 8</b> para o cálculo de compatibilidade profissional entre candidatos e vagas, utilizando análise de habilidades e requisitos com base em inteligência computacional.</p>
-</div>
-
-[![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
-[![C#](https://img.shields.io/badge/C%23-ASP.NET_Core-green.svg)](https://learn.microsoft.com/aspnet/core)
-[![Entity Framework](https://img.shields.io/badge/ORM-Entity%20Framework%20Core-purple.svg)](https://learn.microsoft.com/ef/)
-[![ML.NET](https://img.shields.io/badge/ML.NET-Cálculo%20de%20Compatibilidade-orange.svg)](https://dotnet.microsoft.com/apps/machinelearning-ai/ml-dotnet)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-[![FIAP](https://img.shields.io/badge/FIAP-2TDSB-red.svg)](https://www.fiap.com.br/)
+<p align="center">
+  <em>Disciplina:</em> <b>Advanced Business Development with .NET</b><br>
+  <em>Professor Orientador:</em> <b>Leonardo Gasparini Romão</b><br>
+  <em>Turma:</em> <b>2TDSB</b> — <em>Curso:</em> <b>Tecnologia em Análise e Desenvolvimento de Sistemas – FIAP</b>
+</p>
 
 ---
 
-## Visão Geral
+### 🧠 Sobre o Projeto
 
-O **JobFitScore** é uma **API RESTful** desenvolvida para realizar o **cálculo de compatibilidade profissional** entre candidatos e vagas, com base em suas **habilidades, experiências e cursos relacionados**.  
-A solução busca apoiar **empresas** no processo de recrutamento e **profissionais** no autoconhecimento, indicando cursos recomendados para melhorar seu desempenho.
+API RESTful desenvolvida em <b>.NET 8</b> para o cálculo de compatibilidade profissional entre candidatos e vagas, 
+utilizando análise de habilidades e requisitos com base em técnicas de <b>inteligência computacional</b>.
 
-A aplicação implementa **autenticação JWT**, **HATEOAS**, **Health Checks**, **versionamento de API**, **Entity Framework Core** com banco **Oracle**, e estrutura pronta para integração com **ML.NET** no cálculo automatizado de score.
+---
+
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white"/>
+  <img src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white"/>
+  <img src="https://img.shields.io/badge/ASP.NET_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Entity_Framework_Core-68217A?style=for-the-badge&logo=nuget&logoColor=white"/>
+  <img src="https://img.shields.io/badge/ML.NET-AF52DE?style=for-the-badge&logo=ml-dotnet&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Cálculo%20de%20Compatibilidade-FF8800?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/FIAP-ED145B?style=for-the-badge"/>
+</p>
+
 
 ---
 
