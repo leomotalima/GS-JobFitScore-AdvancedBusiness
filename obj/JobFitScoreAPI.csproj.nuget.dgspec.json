@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI\\JobFitScoreAPI.csproj": {}
+    "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI\\JobFitScoreAPI.csproj": {
+    "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI\\JobFitScoreAPI.csproj",
+        "projectUniqueName": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI.csproj",
         "projectName": "JobFitScoreAPI",
-        "projectPath": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI\\JobFitScoreAPI.csproj",
+        "projectPath": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI.csproj",
         "packagesPath": "C:\\Users\\leom\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\JobFitScoreAPI\\obj\\",
+        "outputPath": "C:\\Users\\leom\\GS-JobFitScore-AdvancedBusiness\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\leom\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -44,9 +44,45 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "Asp.Versioning.Mvc": {
               "target": "Package",
-              "version": "[10.0.0-preview.3.25172.1, )"
+              "version": "[8.1.0, )"
+            },
+            "Asp.Versioning.Mvc.ApiExplorer": {
+              "target": "Package",
+              "version": "[8.1.0, )"
+            },
+            "AspNetCore.HealthChecks.Uris": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "DotNetEnv": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.ML": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "Oracle.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.23.26000, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[9.0.6, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.14.0, )"
             }
           },
           "imports": [
