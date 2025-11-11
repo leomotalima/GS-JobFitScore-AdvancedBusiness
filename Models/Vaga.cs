@@ -17,9 +17,14 @@ namespace JobFitScoreAPI.Models
         [Column("requisitos")]
         public string? Requisitos { get; set; }
 
-        [Column("empresa")]
-        public string? Empresa { get; set; }
+        // 🔹 Chave estrangeira (empresa relacionada)
+        [Column("id_empresa")]
+        public int IdEmpresa { get; set; }
 
+        // 🔹 Propriedade de navegação (relacionamento N:1)
+        public Empresa? Empresa { get; set; }
+
+        // 🔹 Relacionamento com candidaturas (1:N)
         public ICollection<Candidatura>? Candidaturas { get; set; }
     }
 }

@@ -1,24 +1,23 @@
-using Asp.Versioning.Builder;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using JobFitScoreAPI.Data;
-using Microsoft.AspNetCore.Mvc;
-using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text;
+using System.Text.Json;
+using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Services;
 using JobFitScoreAPI.Swagger;
 using DotNetEnv;
 using Microsoft.ML;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================
-// BANCO DE DADOS
+// 🔹 VARIÁVEIS DE AMBIENTE (Oracle, JWT etc.)
 // ============================================================
 if (builder.Environment.EnvironmentName != "Testing")
     Env.Load();
@@ -26,9 +25,11 @@ if (builder.Environment.EnvironmentName != "Testing")
 var user = Environment.GetEnvironmentVariable("ORACLE_USER_ID");
 var pass = Environment.GetEnvironmentVariable("ORACLE_PASSWORD");
 var dataSource = Environment.GetEnvironmentVariable("ORACLE_DATA_SOURCE");
-
 var connectionString = $"User Id={user};Password={pass};Data Source={dataSource};";
 
+// ============================================================
+// 🔹 BANCO DE DADOS ORACLE
+// ============================================================
 if (!string.IsNullOrEmpty(connectionString))
 {
     builder.Services.AddDbContext<AppDbContext>(options =>
@@ -40,20 +41,26 @@ else
 }
 
 // ============================================================
-// MACHINE LEARNING
+// 🔹 MACHINE LEARNING (ML.NET)
 // ============================================================
 builder.Services.AddSingleton(new MLContext());
 builder.Services.AddSingleton<JobFitMlService>();
 
 // ============================================================
-// VERSIONAMENTO DA API
+// 🔹 CONTROLLERS
+// ============================================================
+builder.Services.AddControllers();
+
+// ============================================================
+// 🔹 VERSIONAMENTO DA API (v1 e v2) – Asp.Versioning 8.1
 // ============================================================
 builder.Services
-    .AddApiVersioning(o =>
+    .AddApiVersioning(options =>
     {
-        o.AssumeDefaultVersionWhenUnspecified = true;
-        o.DefaultApiVersion = new ApiVersion(1, 0);
-        o.ApiVersionReader = new UrlSegmentApiVersionReader();
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
     })
     .AddApiExplorer(options =>
     {
@@ -61,12 +68,12 @@ builder.Services
         options.SubstituteApiVersionInUrl = true;
     });
 
-
 // ============================================================
-// AUTENTICAÇÃO JWT
+// 🔹 AUTENTICAÇÃO JWT
 // ============================================================
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "default_key_12345");
-builder.Services.AddSingleton<JwtService>(); // Garante que a classe exista
+
+builder.Services.AddSingleton<JwtService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
@@ -84,15 +91,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // ============================================================
-// SWAGGER
+// 🔹 SWAGGER (com versionamento dinâmico)
 // ============================================================
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "JobFitScore API",
         Version = "v1",
-        Description = "API para análise de compatibilidade profissional"
+        Description = "API para análise de compatibilidade profissional - Versão 1 (CRUDs e dados base)"
+    });
+
+    opt.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Title = "JobFitScore API",
+        Version = "v2",
+        Description = "API para análise de compatibilidade profissional - Versão 2 (IA e métricas)"
     });
 
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -109,11 +124,10 @@ builder.Services.AddSwaggerGen(opt =>
     opt.OperationFilter<SwaggerAllowAnonymousFilter>();
     opt.DocumentFilter<Documentacao>();
     opt.DocumentFilter<OrdenarTagsDocumentFilter>();
-    // 🔹 REMOVIDO opt.EnableAnnotations(); pois o pacote não está instalado
 });
 
 // ============================================================
-// HEALTH CHECKS
+// 🔹 HEALTH CHECKS (API + Banco + Externo)
 // ============================================================
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("BancoOracle")
@@ -124,39 +138,47 @@ builder.Services.AddHealthChecks()
     );
 
 // ============================================================
-// CONTROLLERS E SERVIÇOS
+// 🔹 AUTORIZAÇÃO
 // ============================================================
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddAuthorization();
 
 // ============================================================
-// PIPELINE
+// 🔹 PIPELINE
 // ============================================================
 var app = builder.Build();
 
+// Swagger com versionamento dinâmico
 if (app.Environment.IsDevelopment())
 {
+    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    app.UseSwaggerUI(options =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "JobFitScore API v1");
-        c.RoutePrefix = "swagger";
+        foreach (var description in provider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                $"JobFitScore API {description.GroupName.ToUpper()}"
+            );
+        }
+        options.RoutePrefix = "swagger";
     });
 }
 
-// Redireciona raiz para Swagger
+// 🔸 Redireciona raiz para o Swagger
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/swagger");
     return Task.CompletedTask;
 });
 
+// 🔸 Segurança
 app.UseAuthentication();
 app.UseAuthorization();
 
 // ============================================================
-// HEALTH CHECKS ENDPOINTS
+// 🔹 ENDPOINTS DE HEALTH CHECK
 // ============================================================
 app.MapGet("/api/health/ping", () => Results.Ok(new
 {
@@ -183,6 +205,7 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 });
+
 
 app.MapControllers();
 app.Run();
