@@ -31,7 +31,7 @@ namespace JobFitScoreAPI.Controllers.v1
         {
             _context.Usuarios.Add(usuario);
             _context.SaveChanges();
-            return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuario);
+            return CreatedAtAction(nameof(GetById), new { id = usuario.IdUsuario }, usuario);
         }
 
         [HttpPut("{id}")]
