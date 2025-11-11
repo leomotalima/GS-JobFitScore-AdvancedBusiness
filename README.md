@@ -1,7 +1,8 @@
 
 <div align="center">
-  <img src="https://github.com/thejaobiell/GS-JobFitScore/blob/main/Advanced%20Business%20Development%20With%20.NET/images/logo.png?raw=true" alt="JobFitScore Logo" width="200"/>
-  
+  <img src="https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness/blob/main/Static/images/logo.png?raw=true" alt="JobFitScore Logo" width="200"/>
+</div>
+
   <h1><i><b>JobFitScore</b></i> - Global Solution</h1>
   <p><b>Disciplina:</b> Advanced Business Development with .NET</p>
   <p><b>Professor Orientador:</b> Leonardo Gasparini Romão</p>
