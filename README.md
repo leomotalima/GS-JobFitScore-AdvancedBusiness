@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness/blob/main/Static/images/logo_JobFitScore.png?raw=true" alt="JobFitScore Logo" width="220"/>
+  <img src="https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness/blob/main/Static/images/logo.png?raw=true" alt="JobFitScore Logo" width="220"/>
   <br><br>
   <b>JobFitScore – Global Solution</b>
 </h1>
