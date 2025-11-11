@@ -1,0 +1,19 @@
+# Build
+/bin/
+/obj/
+
+# Usuário e IDE
+*.user
+*.suo
+.vs/
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Ambiente
+.env
+
+# JSON temporários
+*.json.tmp
