@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using JobFitScoreAPI.Dtos;
+using BCrypt.Net;
+
 
 namespace JobFitScoreAPI.Controllers.v1
 {
@@ -20,9 +23,9 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // ============================================================
+        // ============================================
         // GET: api/v1/empresa?page=1&pageSize=5
-        // ============================================================
+        // ============================================
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
         {
@@ -36,6 +39,13 @@ namespace JobFitScoreAPI.Controllers.v1
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .AsNoTracking()
+                .Select(e => new EmpresaResponseDto
+                {
+                    IdEmpresa = e.IdEmpresa,
+                    Nome = e.Nome,
+                    Cnpj = e.Cnpj,
+                    Email = e.Email,
+                })
                 .ToListAsync();
 
             var result = new
@@ -56,9 +66,9 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
+        // ============================================
         // GET: api/v1/empresa/{id}
-        // ============================================================
+        // ============================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -71,7 +81,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 empresa.IdEmpresa,
                 empresa.Nome,
                 empresa.Cnpj,
-                empresa.Endereco,
+                empresa.Email,
                 links = new List<object>
                 {
                     new { rel = "self", href = GetByIdUrl(id), method = "GET" },
@@ -84,26 +94,40 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
+        // ============================================
         // POST: api/v1/empresa
-        // ============================================================
+        // ============================================
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Empresa empresa)
+        public async Task<IActionResult> Create([FromBody] EmpresaCreateDto dto)
         {
-            if (empresa == null)
+            if (dto == null)
                 return BadRequest(new { mensagem = "Dados inválidos." });
+
+            if (await _context.Empresas.AnyAsync(e => e.Cnpj == dto.Cnpj))
+                return Conflict(new { mensagem = "CNPJ já cadastrado." });
+
+            if (await _context.Empresas.AnyAsync(e => e.Email == dto.Email))
+                return Conflict(new { mensagem = "E-mail já cadastrado." });
+
+            var empresa = new Empresa
+            {
+                Nome = dto.Nome,
+                Cnpj = dto.Cnpj,
+                Email = dto.Email,
+                Senha = BCrypt.Net.BCrypt.HashPassword(dto.Senha),
+            };
 
             _context.Empresas.Add(empresa);
             await _context.SaveChangesAsync();
 
             var url = GetByIdUrl(empresa.IdEmpresa);
 
-            var result = new
+            return Created(url, new
             {
                 empresa.IdEmpresa,
                 empresa.Nome,
                 empresa.Cnpj,
-                empresa.Endereco,
+                empresa.Email,
                 links = new List<object>
                 {
                     new { rel = "self", href = url, method = "GET" },
@@ -111,29 +135,30 @@ namespace JobFitScoreAPI.Controllers.v1
                     new { rel = "delete", href = url, method = "DELETE" },
                     new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
                 }
-            };
-
-            return Created(url, result);
+            });
         }
 
-        // ============================================================
+        // ============================================
         // PUT: api/v1/empresa/{id}
-        // ============================================================
+        // ============================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Empresa empresa)
+        public async Task<IActionResult> Update(int id, [FromBody] EmpresaUpdateDto dto)
         {
-            if (id != empresa.IdEmpresa)
-                return BadRequest(new { mensagem = "O ID da URL não corresponde ao do corpo da requisição." });
+            var empresa = await _context.Empresas.FindAsync(id);
+            if (empresa == null)
+                return NotFound(new { mensagem = "Empresa não encontrada." });
 
-            _context.Entry(empresa).State = EntityState.Modified;
+            empresa.Nome = dto.Nome;
+            empresa.Email = dto.Email;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // ============================================================
+        // ============================================
         // DELETE: api/v1/empresa/{id}
-        // ============================================================
+        // ============================================
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -147,23 +172,13 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        // ============================================================
-        // Métodos auxiliares HATEOAS
-        // ============================================================
+        // ============================================
+        // Links auxiliares (HATEOAS)
+        // ============================================
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetById),
-                controller: "Empresa",
-                values: new { id }
-            ) ?? string.Empty; 
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Empresa", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetAll),
-                controller: "Empresa",
-                values: new { page, pageSize }
-            ) ?? string.Empty; 
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Empresa", new { page, pageSize }) ?? string.Empty;
     }
 }
