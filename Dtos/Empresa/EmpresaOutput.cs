@@ -1,6 +1,6 @@
-namespace JobFitScoreAPI.Dtos
+namespace JobFitScoreAPI.Dtos.Empresa
 {
-    public class EmpresaResponseDto
+    public class EmpresaOutput
     {
         public int IdEmpresa { get; set; }
         public string Nome { get; set; } = string.Empty;
