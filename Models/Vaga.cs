@@ -14,17 +14,23 @@ namespace JobFitScoreAPI.Models
         [Column("titulo")]
         public string Titulo { get; set; } = string.Empty;
 
-        [Column("requisitos")]
-        public string? Requisitos { get; set; }
+        [Column("descricao")]
+        public string? Descricao { get; set; }
 
-        // 🔹 Chave estrangeira (empresa relacionada)
+        [Column("nivel_experiencia")]
+        public string? NivelExperiencia { get; set; }
+
+        [Column("salario")]
+        public decimal? Salario { get; set; }
+
+        [Column("localizacao")]
+        public string? Localizacao { get; set; }
+
+        [ForeignKey("Empresa")]
         [Column("id_empresa")]
-        public int IdEmpresa { get; set; }
+        public int? IdEmpresa { get; set; }
 
-        // 🔹 Propriedade de navegação (relacionamento N:1)
         public Empresa? Empresa { get; set; }
-
-        // 🔹 Relacionamento com candidaturas (1:N)
         public ICollection<Candidatura>? Candidaturas { get; set; }
     }
 }

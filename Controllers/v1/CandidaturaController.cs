@@ -1,29 +1,42 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class CandidaturaController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly LinkGenerator _linkGenerator;
 
-        public CandidaturaController(AppDbContext context)
+        public CandidaturaController(AppDbContext context, LinkGenerator linkGenerator)
         {
             _context = context;
+            _linkGenerator = linkGenerator;
         }
 
-        // GET: api/v1/candidatura
+        // ============================================================
+        // GET: api/v1/candidatura?page=1&pageSize=5
+        // ============================================================
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
         {
-            var candidaturas = _context.Candidaturas
+            if (page <= 0 || pageSize <= 0)
+                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
+
+            var total = await _context.Candidaturas.CountAsync();
+
+            var candidaturas = await _context.Candidaturas
                 .Include(c => c.Usuario)
                 .Include(c => c.Vaga)
+                .OrderByDescending(c => c.DataCandidatura)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(c => new
                 {
                     c.IdCandidatura,
@@ -32,46 +45,103 @@ namespace JobFitScoreAPI.Controllers.v1
                     c.Score,
                     c.DataCandidatura
                 })
-                .ToList();
+                .ToListAsync();
 
-            return Ok(candidaturas);
+            var result = new
+            {
+                totalItems = total,
+                currentPage = page,
+                pageSize,
+                totalPages = (int)Math.Ceiling((double)total / pageSize),
+                data = candidaturas,
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
+                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
+                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
+                }
+            };
+
+            return Ok(result);
         }
 
+        // ============================================================
         // GET: api/v1/candidatura/{id}
+        // ============================================================
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            var candidatura = _context.Candidaturas
+            var candidatura = await _context.Candidaturas
                 .Include(c => c.Usuario)
                 .Include(c => c.Vaga)
-                .FirstOrDefault(c => c.IdCandidatura == id);
+                .FirstOrDefaultAsync(c => c.IdCandidatura == id);
 
             if (candidatura == null)
                 return NotFound(new { mensagem = "Candidatura não encontrada." });
 
-            return Ok(new
+            var result = new
             {
                 candidatura.IdCandidatura,
-                Usuario = candidatura.Usuario != null ? candidatura.Usuario.Nome : "Usuário não definido",
-                Vaga = candidatura.Vaga != null ? candidatura.Vaga.Titulo : "Vaga não definida",
+                Usuario = candidatura.Usuario?.Nome ?? "Usuário não definido",
+                Vaga = candidatura.Vaga?.Titulo ?? "Vaga não definida",
                 candidatura.Score,
-                candidatura.DataCandidatura
-            });
+                candidatura.DataCandidatura,
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
+                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+                }
+            };
+
+            return Ok(result);
         }
 
+        // ============================================================
         // POST: api/v1/candidatura
+        // ============================================================
         [HttpPost]
-        public IActionResult Create([FromBody] Candidatura candidatura)
+        public async Task<IActionResult> Create([FromBody] Candidatura candidatura)
         {
             if (candidatura == null)
                 return BadRequest(new { mensagem = "Dados inválidos." });
 
             _context.Candidaturas.Add(candidatura);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById),
-                new { id = candidatura.IdCandidatura },
-                candidatura);
+            var url = GetByIdUrl(candidatura.IdCandidatura);
+
+            var result = new
+            {
+                candidatura.IdCandidatura,
+                candidatura.Score,
+                candidatura.DataCandidatura,
+                links = new List<object>
+                {
+                    new { rel = "self", href = url, method = "GET" },
+                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+                }
+            };
+
+            return Created(url, result);
         }
+
+        // ============================================================
+        // Métodos auxiliares para gerar URLs dinâmicas (HATEOAS)
+        // ============================================================
+        private string GetByIdUrl(int id) =>
+            _linkGenerator.GetUriByAction(
+                HttpContext,
+                action: nameof(GetById),
+                controller: "Candidatura",
+                values: new { id }
+            ) ?? string.Empty; 
+
+        private string GetPageUrl(int page, int pageSize) =>
+            _linkGenerator.GetUriByAction(
+                HttpContext,
+                action: nameof(GetAll),
+                controller: "Candidatura",
+                values: new { page, pageSize }
+            ) ?? string.Empty; 
     }
 }

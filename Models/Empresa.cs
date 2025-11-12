@@ -17,7 +17,9 @@ namespace JobFitScoreAPI.Models
         [Column("cnpj")]
         public string? Cnpj { get; set; }
 
-        // 🔹 Relacionamento com Vaga (1:N)
+        [Column("endereco")]
+        public string? Endereco { get; set; }
+
         public ICollection<Vaga>? Vagas { get; set; }
     }
 }

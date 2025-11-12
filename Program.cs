@@ -13,11 +13,12 @@ using JobFitScoreAPI.Services;
 using JobFitScoreAPI.Swagger;
 using DotNetEnv;
 using Microsoft.ML;
+using Swashbuckle.AspNetCore.Annotations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ============================================================
-// 🔹 VARIÁVEIS DE AMBIENTE (Oracle, JWT etc.)
+// VARIÁVEIS DE AMBIENTE (Oracle, JWT etc.)
 // ============================================================
 if (builder.Environment.EnvironmentName != "Testing")
     Env.Load();
@@ -28,7 +29,7 @@ var dataSource = Environment.GetEnvironmentVariable("ORACLE_DATA_SOURCE");
 var connectionString = $"User Id={user};Password={pass};Data Source={dataSource};";
 
 // ============================================================
-// 🔹 BANCO DE DADOS ORACLE
+// BANCO DE DADOS ORACLE
 // ============================================================
 if (!string.IsNullOrEmpty(connectionString))
 {
@@ -41,35 +42,34 @@ else
 }
 
 // ============================================================
-// 🔹 MACHINE LEARNING (ML.NET)
+// MACHINE LEARNING (ML.NET)
 // ============================================================
 builder.Services.AddSingleton(new MLContext());
 builder.Services.AddSingleton<JobFitMlService>();
 
 // ============================================================
-// 🔹 CONTROLLERS
+// CONTROLLERS
 // ============================================================
 builder.Services.AddControllers();
 
 // ============================================================
-// 🔹 VERSIONAMENTO DA API (v1 e v2) – Asp.Versioning 8.1
+// VERSIONAMENTO DA API (v1 e v2) – Asp.Versioning 8.1
 // ============================================================
-builder.Services
-    .AddApiVersioning(options =>
-    {
-        options.DefaultApiVersion = new ApiVersion(1, 0);
-        options.AssumeDefaultVersionWhenUnspecified = true;
-        options.ReportApiVersions = true;
-        options.ApiVersionReader = new UrlSegmentApiVersionReader();
-    })
-    .AddApiExplorer(options =>
-    {
-        options.GroupNameFormat = "'v'VVV";
-        options.SubstituteApiVersionInUrl = true;
-    });
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
 // ============================================================
-// 🔹 AUTENTICAÇÃO JWT
+// AUTENTICAÇÃO JWT
 // ============================================================
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "default_key_12345");
 
@@ -91,7 +91,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // ============================================================
-// 🔹 SWAGGER (com versionamento dinâmico)
+// SWAGGER (com versionamento dinâmico)
 // ============================================================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
@@ -110,6 +110,8 @@ builder.Services.AddSwaggerGen(opt =>
         Description = "API para análise de compatibilidade profissional - Versão 2 (IA e métricas)"
     });
 
+    // Removido opt.EnableAnnotations(); — opcional e incompatível com versão atual
+
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -127,7 +129,7 @@ builder.Services.AddSwaggerGen(opt =>
 });
 
 // ============================================================
-// 🔹 HEALTH CHECKS (API + Banco + Externo)
+// HEALTH CHECKS (API + Banco + Externo)
 // ============================================================
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("BancoOracle")
@@ -138,20 +140,18 @@ builder.Services.AddHealthChecks()
     );
 
 // ============================================================
-// 🔹 AUTORIZAÇÃO
+// AUTORIZAÇÃO
 // ============================================================
 builder.Services.AddAuthorization();
 
 // ============================================================
-// 🔹 PIPELINE
+// PIPELINE
 // ============================================================
 var app = builder.Build();
 
-// Swagger com versionamento dinâmico
 if (app.Environment.IsDevelopment())
 {
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
@@ -166,19 +166,19 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// 🔸 Redireciona raiz para o Swagger
+// Redireciona raiz para o Swagger
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/swagger");
     return Task.CompletedTask;
 });
 
-// 🔸 Segurança
+// Segurança
 app.UseAuthentication();
 app.UseAuthorization();
 
 // ============================================================
-// 🔹 ENDPOINTS DE HEALTH CHECK
+// ENDPOINTS DE HEALTH CHECK
 // ============================================================
 app.MapGet("/api/health/ping", () => Results.Ok(new
 {
@@ -205,7 +205,6 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 });
-
 
 app.MapControllers();
 app.Run();

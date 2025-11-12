@@ -10,10 +10,14 @@ namespace JobFitScoreAPI.Models
         [Column("id_curso")]
         public int IdCurso { get; set; }
 
+        [Required]
         [Column("nome")]
-        public string? Nome { get; set; }
+        public string Nome { get; set; } = string.Empty;
 
-        [Column("habilidade_relacionada")]
-        public string? HabilidadeRelacionada { get; set; }
+        [Column("descricao")]
+        public string? Descricao { get; set; }
+
+        [Column("carga_horaria")]
+        public int? CargaHoraria { get; set; }
     }
 }
