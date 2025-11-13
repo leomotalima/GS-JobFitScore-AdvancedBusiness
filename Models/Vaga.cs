@@ -26,6 +26,9 @@ namespace JobFitScoreAPI.Models
         [Column("localizacao")]
         public string? Localizacao { get; set; }
 
+        [Column("habilidades")]
+        public string? Habilidades { get; set; }
+
         [ForeignKey("Empresa")]
         [Column("id_empresa")]
         public int? IdEmpresa { get; set; }

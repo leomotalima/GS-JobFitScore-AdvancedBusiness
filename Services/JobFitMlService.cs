@@ -3,20 +3,23 @@ using JobFitScoreAPI.Models;
 
 namespace JobFitScoreAPI.Services
 {
-    public class JobFitMlService
+    public class JobFitMLService
     {
         private readonly MLContext _mlContext;
-        private ITransformer _model;
+        private readonly ITransformer _model;
 
-        public JobFitMlService()
+      
+        public JobFitMLService()
         {
             _mlContext = new MLContext();
 
+            // Carrega o dataset de treinamento
             var dataView = _mlContext.Data.LoadFromTextFile<JobFitData>(
                 path: "Scripts/ml_jobfitscore.csv",
                 hasHeader: true,
                 separatorChar: ',');
 
+            // Define o pipeline de transformação e treinamento
             var pipeline = _mlContext.Transforms.Concatenate("Features",
                     nameof(JobFitData.ExperienciaAnos),
                     nameof(JobFitData.HabilidadesMatch),
@@ -26,9 +29,11 @@ namespace JobFitScoreAPI.Services
                     labelColumnName: "ScoreCompatibilidade",
                     maximumNumberOfIterations: 100));
 
+            // Treina o modelo
             _model = pipeline.Fit(dataView);
         }
 
+        // Método que usa o modelo treinado para prever o score de compatibilidade
         public float PreverCompatibilidade(JobFitData dadosEntrada)
         {
             var engine = _mlContext.Model.CreatePredictionEngine<JobFitData, JobFitPrediction>(_model);
@@ -37,6 +42,7 @@ namespace JobFitScoreAPI.Services
         }
     }
 
+    // Classe auxiliar que representa o resultado da previsão
     public class JobFitPrediction
     {
         public float ScoreCompatibilidade { get; set; }

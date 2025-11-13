@@ -2,35 +2,31 @@ using Microsoft.AspNetCore.Mvc;
 using JobFitScoreAPI.Models;
 using JobFitScoreAPI.Services;
 
-namespace JobFitScoreAPI.Controllers.v1
+namespace JobFitScoreAPI.Controllers.v2
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v2/[controller]")]
     public class MlController : ControllerBase
     {
-        private readonly JobFitMlService _mlService;
+        private readonly JobFitMLService _mlService;
 
-        public MlController(JobFitMlService mlService)
+        
+        public MlController(JobFitMLService mlService)
         {
             _mlService = mlService;
         }
 
-        /// <summary>
-        /// Faz uma previsão de compatibilidade profissional com base nos dados fornecidos.
-        /// </summary>
-        /// <param name="input">Dados do candidato e vaga</param>
-        /// <returns>Score previsto (0 a 100)</returns>
         [HttpPost("prever")]
-        public IActionResult Prever([FromBody] JobFitData input)
+        public IActionResult PreverCompatibilidade([FromBody] JobFitData entrada)
         {
-            if (input == null)
-                return BadRequest(new { mensagem = "Dados de entrada inválidos." });
+            if (entrada == null)
+                return BadRequest("Dados de entrada inválidos.");
 
-            var resultado = _mlService.PreverCompatibilidade(input);
+            float resultado = _mlService.PreverCompatibilidade(entrada);
             return Ok(new
             {
-                score = resultado,
-                mensagem = "Previsão de compatibilidade gerada com sucesso!"
+                Score = resultado,
+                Mensagem = $"Score de compatibilidade calculado com sucesso: {resultado:F2}%"
             });
         }
     }

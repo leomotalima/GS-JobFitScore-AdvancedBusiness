@@ -45,7 +45,7 @@ else
 // MACHINE LEARNING (ML.NET)
 // ============================================================
 builder.Services.AddSingleton(new MLContext());
-builder.Services.AddSingleton<JobFitMlService>();
+builder.Services.AddScoped<JobFitMLService>();
 
 // ============================================================
 // CONTROLLERS
