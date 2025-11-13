@@ -24,7 +24,6 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // ============================================================
         // GET: api/v1/empresa?page=1&pageSize=5
-        // Lista paginada de empresas
         // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
@@ -68,7 +67,6 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // ============================================================
         // GET: api/v1/empresa/{id}
-        // Busca uma empresa pelo ID
         // ============================================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -97,7 +95,6 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // ============================================================
         // POST: api/v1/empresa
-        // Cria uma nova empresa
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] EmpresaInput input)
@@ -144,7 +141,6 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // ============================================================
         // PUT: api/v1/empresa/{id}
-        // Atualiza uma empresa
         // ============================================================
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] EmpresaInput input)
@@ -163,8 +159,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // ============================================================
         // DELETE: api/v1/empresa/{id}
-        // Remove uma empresa
-        // ============================================================
+       // ============================================================
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
