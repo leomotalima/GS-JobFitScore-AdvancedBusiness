@@ -8,7 +8,7 @@ namespace JobFitScoreAPI.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         // ===========================================================
-        // 🔹 Conjuntos de Tabelas
+        // Conjuntos de Tabelas
         // ===========================================================
         public DbSet<Usuario> Usuarios { get; set; } = null!;
         public DbSet<Empresa> Empresas { get; set; } = null!;
@@ -25,7 +25,7 @@ namespace JobFitScoreAPI.Data
             base.OnModelCreating(modelBuilder);
 
             // ===========================================================
-            // 🔹 Mapeamento das Tabelas Oracle (em MAIÚSCULO)
+            // Mapeamento das Tabelas Oracle (em MAIÚSCULO)
             // ===========================================================
             modelBuilder.Entity<Usuario>().ToTable("USUARIOS");
             modelBuilder.Entity<Empresa>().ToTable("EMPRESAS");
@@ -38,7 +38,7 @@ namespace JobFitScoreAPI.Data
             modelBuilder.Entity<AuditoriaLog>().ToTable("AUDITORIA_LOG");
 
             // ===========================================================
-            // 🔹 RELACIONAMENTOS
+            // RELACIONAMENTOS
             // ===========================================================
 
             // Candidatura → Usuário
@@ -63,7 +63,7 @@ namespace JobFitScoreAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ===========================================================
-            // 🔹 Índices Únicos das Tabelas N:N
+            // Índices Únicos das Tabelas N:N
             // ===========================================================
             modelBuilder.Entity<UsuarioHabilidade>()
                 .HasIndex(uh => new { uh.UsuarioId, uh.HabilidadeId })
@@ -74,7 +74,7 @@ namespace JobFitScoreAPI.Data
                 .IsUnique();
 
             // ===========================================================
-            // 🔹 Ajusta nomes de tabela (Oracle usa MAIÚSCULO)
+            // Ajusta nomes de tabela (Oracle usa MAIÚSCULO)
             // ===========================================================
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
