@@ -11,19 +11,24 @@ using System.Text.Json;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Services;
 using JobFitScoreAPI.Swagger;
+using JobFitScoreAPI.Repository;
+using JobFitScoreAPI.Repository.Interfaces;
 using DotNetEnv;
 using Microsoft.ML;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Carregar .env exceto em ambiente de teste
 if (builder.Environment.EnvironmentName != "Testing")
     Env.Load();
 
+// Variáveis de ambiente
 var user = Environment.GetEnvironmentVariable("ORACLE_USER_ID");
 var pass = Environment.GetEnvironmentVariable("ORACLE_PASSWORD");
 var dataSource = Environment.GetEnvironmentVariable("ORACLE_DATA_SOURCE");
 var connectionString = $"User Id={user};Password={pass};Data Source={dataSource};";
 
+// Configuração do Oracle
 if (builder.Environment.EnvironmentName != "Testing")
 {
     if (!string.IsNullOrEmpty(connectionString))
@@ -33,11 +38,19 @@ if (builder.Environment.EnvironmentName != "Testing")
     }
 }
 
+// ML.NET
 builder.Services.AddSingleton(new MLContext());
 builder.Services.AddScoped<JobFitMLService>();
 
+// Repositories
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ICandidaturaRepository, CandidaturaRepository>();
+builder.Services.AddScoped<IVagaRepository, VagaRepository>();
+
+// Controllers
 builder.Services.AddControllers();
 
+// Versionamento da API
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -51,6 +64,7 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+// JWT
 var key = Encoding.UTF8.GetBytes(
     builder.Environment.EnvironmentName == "Testing"
         ? "testing_key_123"
@@ -72,6 +86,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -93,6 +108,7 @@ builder.Services.AddSwaggerGen(opt =>
     opt.DocumentFilter<OrdenarTagsDocumentFilter>();
 });
 
+// Health Check
 var hc = builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("BancoOracle");
 
@@ -109,6 +125,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Swagger no ambiente Dev
 if (app.Environment.IsDevelopment())
 {
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
@@ -127,15 +144,18 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Redirect root → Swagger
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/swagger");
     return Task.CompletedTask;
 });
 
+// Auth
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Health Ping
 app.MapGet("/api/health/ping", (IHostEnvironment env) =>
 {
     var start = System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime();
@@ -159,6 +179,7 @@ app.MapGet("/api/health/ping", (IHostEnvironment env) =>
     });
 });
 
+// Health Check Completo
 app.MapHealthChecks("/api/health", new HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
@@ -197,7 +218,11 @@ app.MapHealthChecks("/api/health", new HealthCheckOptions
     }
 });
 
+// Controllers
 app.MapControllers();
+
+// Run
 app.Run();
 
+// Necessário para testes de integração
 public partial class Program { }
