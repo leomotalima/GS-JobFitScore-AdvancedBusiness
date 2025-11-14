@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -22,35 +23,62 @@ namespace JobFitScoreAPI.Controllers.v1
         // GET: api/v1/vagahabilidade
         // ============================================================
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<VagaHabilidade>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var vagaHabilidades = await _context.VagaHabilidades
+            var dados = await _context.VagaHabilidades
                 .Include(v => v.Vaga)
                 .Include(h => h.Habilidade)
                 .AsNoTracking()
+                .Select(vh => new
+                {
+                    vh.IdVagaHabilidade,
+                    Vaga = vh.Vaga != null ? vh.Vaga.Titulo : "Vaga não encontrada",
+                    Habilidade = vh.Habilidade != null ? vh.Habilidade.Nome : "Habilidade não encontrada",
+                    vh.VagaId,
+                    vh.HabilidadeId
+                })
                 .ToListAsync();
 
-            return Ok(vagaHabilidades);
+            return Ok(dados);
         }
 
         // ============================================================
         // POST: api/v1/vagahabilidade
         // ============================================================
         [HttpPost]
-        public async Task<ActionResult<VagaHabilidade>> Create([FromBody] VagaHabilidade vagaHabilidade)
+        public async Task<IActionResult> Create([FromBody] VagaHabilidade input)
         {
-            if (vagaHabilidade == null)
+            if (input == null)
                 return BadRequest(new { mensagem = "Dados inválidos." });
 
-            _context.VagaHabilidades.Add(vagaHabilidade);
+            // Validação: vaga existe?
+            var vaga = await _context.Vagas.FindAsync(input.VagaId);
+            if (vaga == null)
+                return NotFound(new { mensagem = "Vaga não encontrada." });
+
+            // Validação: habilidade existe?
+            var habilidade = await _context.Habilidades.FindAsync(input.HabilidadeId);
+            if (habilidade == null)
+                return NotFound(new { mensagem = "Habilidade não encontrada." });
+
+            // Bloqueia duplicados (vaga + habilidade já existe)
+            bool existe = await _context.VagaHabilidades.AnyAsync(vh =>
+                vh.VagaId == input.VagaId &&
+                vh.HabilidadeId == input.HabilidadeId
+            );
+
+            if (existe)
+                return Conflict(new { mensagem = "Essa habilidade já está vinculada a essa vaga." });
+
+            _context.VagaHabilidades.Add(input);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetAll), new
             {
-                vagaHabilidade.IdVagaHabilidade,
-                vagaHabilidade.VagaId,
-                vagaHabilidade.HabilidadeId
-            }, vagaHabilidade);
+                input.IdVagaHabilidade,
+                input.VagaId,
+                input.HabilidadeId
+            }, input);
         }
 
         // ============================================================
@@ -59,11 +87,11 @@ namespace JobFitScoreAPI.Controllers.v1
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var vagaHabilidade = await _context.VagaHabilidades.FindAsync(id);
-            if (vagaHabilidade == null)
+            var registro = await _context.VagaHabilidades.FindAsync(id);
+            if (registro == null)
                 return NotFound(new { mensagem = "Registro não encontrado." });
 
-            _context.VagaHabilidades.Remove(vagaHabilidade);
+            _context.VagaHabilidades.Remove(registro);
             await _context.SaveChangesAsync();
 
             return NoContent();

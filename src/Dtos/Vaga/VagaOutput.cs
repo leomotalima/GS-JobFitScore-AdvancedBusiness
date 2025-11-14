@@ -6,7 +6,7 @@ namespace JobFitScoreAPI.Dtos.Vaga
         public string Titulo { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;
         public string NivelExperiencia { get; set; } = string.Empty;
-        public decimal Salario { get; set; }
+        public decimal? Salario { get; set; }
         public string? Localizacao { get; set; }
     }
 }

@@ -11,6 +11,8 @@ namespace JobFitScoreAPI.Dtos.Usuario
         [EmailAddress(ErrorMessage = "Formato de email inválido.")]
         public string Email { get; set; } = string.Empty;
 
+        public string? Senha { get; set; }
+
         public string? Habilidades { get; set; }
     }
 }

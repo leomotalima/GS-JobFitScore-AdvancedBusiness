@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -99,8 +100,8 @@ namespace JobFitScoreAPI.Controllers.v1
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] EmpresaInput input)
         {
-            if (input == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             if (await _context.Empresas.AnyAsync(e => e.Cnpj == input.Cnpj))
                 return Conflict(new { mensagem = "CNPJ já cadastrado." });
@@ -121,36 +122,32 @@ namespace JobFitScoreAPI.Controllers.v1
 
             var url = GetByIdUrl(empresa.IdEmpresa);
 
-            var result = new
+            var result = new EmpresaOutput
             {
-                empresa.IdEmpresa,
-                empresa.Nome,
-                empresa.Cnpj,
-                empresa.Email,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "update", href = url, method = "PUT" },
-                    new { rel = "delete", href = url, method = "DELETE" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
+                IdEmpresa = empresa.IdEmpresa,
+                Nome = empresa.Nome,
+                Cnpj = empresa.Cnpj,
+                Email = empresa.Email
             };
 
-            return Created(url, result);
+            return Created(url, new { result, links = GenerateLinks(empresa.IdEmpresa) });
         }
 
         // ============================================================
         // PUT: api/v1/empresa/{id}
         // ============================================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] EmpresaInput input)
+        public async Task<IActionResult> Update(int id, [FromBody] EmpresaUpdateInput input)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var empresa = await _context.Empresas.FindAsync(id);
             if (empresa == null)
                 return NotFound(new { mensagem = "Empresa não encontrada." });
 
-            empresa.Nome = input.Nome;
-            empresa.Email = input.Email;
+            empresa.Nome = input.Nome ?? empresa.Nome;
+            empresa.Email = input.Email ?? empresa.Email;
 
             await _context.SaveChangesAsync();
 
@@ -159,7 +156,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // ============================================================
         // DELETE: api/v1/empresa/{id}
-       // ============================================================
+        // ============================================================
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -174,14 +171,21 @@ namespace JobFitScoreAPI.Controllers.v1
         }
 
         // ============================================================
-        // Métodos auxiliares HATEOAS
+        // HATEOAS HELPERS
         // ============================================================
+        private IEnumerable<object> GenerateLinks(int id) =>
+            new List<object>
+            {
+                new { rel = "self", href = GetByIdUrl(id), method = "GET" },
+                new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
+                new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
+                new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+            };
+
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Empresa", new { id })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Empresa", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Empresa", new { page, pageSize })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Empresa", new { page, pageSize }) ?? string.Empty;
     }
 }

@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -126,22 +127,52 @@ namespace JobFitScoreAPI.Controllers.v1
         }
 
         // ============================================================
-        // Métodos auxiliares para gerar URLs dinâmicas (HATEOAS)
+        // PUT: api/v1/candidatura/{id}
+        // ============================================================
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Candidatura atualizada)
+        {
+            if (atualizada == null)
+                return BadRequest(new { mensagem = "Dados inválidos." });
+
+            var candidatura = await _context.Candidaturas.FindAsync(id);
+            if (candidatura == null)
+                return NotFound(new { mensagem = "Candidatura não encontrada." });
+
+            candidatura.Score = atualizada.Score ?? candidatura.Score;
+            candidatura.IdUsuario = atualizada.IdUsuario != 0 ? atualizada.IdUsuario : candidatura.IdUsuario;
+            candidatura.IdVaga = atualizada.IdVaga != 0 ? atualizada.IdVaga : candidatura.IdVaga;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // ============================================================
+        // DELETE: api/v1/candidatura/{id}
+        // ============================================================
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var candidatura = await _context.Candidaturas.FindAsync(id);
+            if (candidatura == null)
+                return NotFound(new { mensagem = "Candidatura não encontrada." });
+
+            _context.Candidaturas.Remove(candidatura);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // ============================================================
+        // MÉTODOS AUXILIARES HATEOAS
         // ============================================================
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetById),
-                controller: "Candidatura",
-                values: new { id }
-            ) ?? string.Empty; 
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Candidatura", new { id })
+            ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetAll),
-                controller: "Candidatura",
-                values: new { page, pageSize }
-            ) ?? string.Empty; 
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Candidatura", new { page, pageSize })
+            ?? string.Empty;
     }
 }

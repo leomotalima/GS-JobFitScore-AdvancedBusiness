@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -37,7 +38,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 .OrderBy(u => u.IdUsuario)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .AsNoTracking()
                 .Select(u => new UsuarioOutput
                 {
                     IdUsuario = u.IdUsuario,
@@ -45,6 +45,7 @@ namespace JobFitScoreAPI.Controllers.v1
                     Email = u.Email,
                     Habilidades = u.Habilidades
                 })
+                .AsNoTracking()
                 .ToListAsync();
 
             var result = new
@@ -75,8 +76,14 @@ namespace JobFitScoreAPI.Controllers.v1
             if (usuario == null)
                 return NotFound(new { mensagem = "Usuário não encontrado." });
 
-            var result = new UserOutputForDetails(usuario.IdUsuario, usuario.Nome, usuario.Email, usuario.Habilidades, GenerateLinks(id));
-            
+            var result = new UserOutputForDetails(
+                usuario.IdUsuario,
+                usuario.Nome,
+                usuario.Email,
+                usuario.Habilidades,
+                GenerateLinks(id)
+            );
+
             return Ok(result);
         }
 
@@ -88,6 +95,10 @@ namespace JobFitScoreAPI.Controllers.v1
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            // Email duplicado
+            if (await _context.Usuarios.AnyAsync(u => u.Email == input.Email))
+                return Conflict(new { mensagem = "E-mail já está em uso." });
 
             var usuario = new Usuario
             {
@@ -102,15 +113,14 @@ namespace JobFitScoreAPI.Controllers.v1
 
             var url = GetByIdUrl(usuario.IdUsuario);
 
-            var result = new UsuarioOutput
+            return Created(url, new
             {
-                IdUsuario = usuario.IdUsuario,
-                Nome = usuario.Nome,
-                Email = usuario.Email,
-                Habilidades = usuario.Habilidades
-            };
-
-            return Created(url, new { result, links = GenerateLinks(usuario.IdUsuario) });
+                usuario.IdUsuario,
+                usuario.Nome,
+                usuario.Email,
+                usuario.Habilidades,
+                links = GenerateLinks(usuario.IdUsuario)
+            });
         }
 
         // ============================================================
@@ -123,9 +133,17 @@ namespace JobFitScoreAPI.Controllers.v1
             if (usuario == null)
                 return NotFound(new { mensagem = "Usuário não encontrado." });
 
+            // Verificar se novo email já pertence a outro usuário
+            if (await _context.Usuarios.AnyAsync(u => u.Email == input.Email && u.IdUsuario != id))
+                return Conflict(new { mensagem = "Este e-mail já está cadastrado para outro usuário." });
+
             usuario.Nome = input.Nome;
             usuario.Email = input.Email;
             usuario.Habilidades = input.Habilidades;
+
+            // Update de senha é opcional
+            if (!string.IsNullOrWhiteSpace(input.Senha))
+                usuario.Senha = BCrypt.Net.BCrypt.HashPassword(input.Senha);
 
             await _context.SaveChangesAsync();
 
@@ -167,6 +185,5 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Usuario", new { page, pageSize }) ?? string.Empty;
     }
 
-    // DTO opcional para deixar o GET/{id} mais limpo
     public record UserOutputForDetails(int IdUsuario, string Nome, string Email, string? Habilidades, IEnumerable<object> Links);
 }

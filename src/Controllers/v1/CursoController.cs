@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -119,7 +120,45 @@ namespace JobFitScoreAPI.Controllers.v1
         }
 
         // ============================================================
-        // Métodos auxiliares (HATEOAS)
+        // PUT: api/v1/curso/{id}
+        // ============================================================
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] Curso atualizado)
+        {
+            if (atualizado == null)
+                return BadRequest(new { mensagem = "Dados inválidos." });
+
+            var curso = await _context.Cursos.FindAsync(id);
+            if (curso == null)
+                return NotFound(new { mensagem = "Curso não encontrado." });
+
+            curso.Nome = atualizado.Nome ?? curso.Nome;
+            curso.Descricao = atualizado.Descricao ?? curso.Descricao;
+            curso.CargaHoraria = atualizado.CargaHoraria != 0 ? atualizado.CargaHoraria : curso.CargaHoraria;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // ============================================================
+        // DELETE: api/v1/curso/{id}
+        // ============================================================
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var curso = await _context.Cursos.FindAsync(id);
+            if (curso == null)
+                return NotFound(new { mensagem = "Curso não encontrado." });
+
+            _context.Cursos.Remove(curso);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // ============================================================
+        // MÉTODOS AUXILIARES (HATEOAS)
         // ============================================================
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(
@@ -127,7 +166,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 action: nameof(GetById),
                 controller: "Curso",
                 values: new { id }
-            ) ?? string.Empty; 
+            ) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
             _linkGenerator.GetUriByAction(
@@ -135,6 +174,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 action: nameof(GetAll),
                 controller: "Curso",
                 values: new { page, pageSize }
-            ) ?? string.Empty; 
+            ) ?? string.Empty;
     }
 }

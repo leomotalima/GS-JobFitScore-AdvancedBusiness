@@ -14,7 +14,7 @@ namespace JobFitScoreAPI.Dtos.Vaga
         public string NivelExperiencia { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O salário é obrigatório.")]
-        public decimal Salario { get; set; }
+        public decimal? Salario { get; set; }
 
         public string? Localizacao { get; set; }
     }

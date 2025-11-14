@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using JobFitScoreAPI.Dtos.Vaga;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
@@ -36,6 +38,15 @@ namespace JobFitScoreAPI.Controllers.v1
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .AsNoTracking()
+                .Select(v => new VagaOutput
+                {
+                    IdVaga = v.IdVaga,
+                    Titulo = v.Titulo,
+                    Descricao = v.Descricao,
+                    NivelExperiencia = v.NivelExperiencia,
+                    Salario = v.Salario,
+                    Localizacao = v.Localizacao
+                })
                 .ToListAsync();
 
             var result = new
@@ -56,7 +67,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-
         // ============================================================
         // GET: api/v1/vaga/{id}
         // ============================================================
@@ -67,89 +77,83 @@ namespace JobFitScoreAPI.Controllers.v1
             if (vaga == null)
                 return NotFound(new { mensagem = "Vaga não encontrada." });
 
-            var result = new
+            var result = new VagaOutput
             {
-                vaga.IdVaga,
-                vaga.Titulo,
-                vaga.Descricao,
-                vaga.NivelExperiencia,
-                vaga.Salario,
-                vaga.Localizacao,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
-                    new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
+                IdVaga = vaga.IdVaga,
+                Titulo = vaga.Titulo,
+                Descricao = vaga.Descricao,
+                NivelExperiencia = vaga.NivelExperiencia,
+                Salario = vaga.Salario,
+                Localizacao = vaga.Localizacao
             };
 
-            return Ok(result);
+            return Ok(new
+            {
+                result,
+                links = GenerateLinks(id)
+            });
         }
-
 
         // ============================================================
         // POST: api/v1/vaga
         // ============================================================
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Vaga vaga)
+        public async Task<IActionResult> Create([FromBody] VagaInput input)
         {
-            if (vaga == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var vaga = new Vaga
+            {
+                Titulo = input.Titulo ?? string.Empty,
+                Descricao = input.Descricao ?? string.Empty,
+                NivelExperiencia = input.NivelExperiencia ?? string.Empty,
+                Salario = input.Salario ?? 0,
+                Localizacao = input.Localizacao ?? string.Empty
+            };
 
             _context.Vagas.Add(vaga);
             await _context.SaveChangesAsync();
 
             var url = GetByIdUrl(vaga.IdVaga);
 
-            var result = new
+            return Created(url, new
             {
-                vaga.IdVaga,
-                vaga.Titulo,
-                vaga.Descricao,
-                vaga.NivelExperiencia,
-                vaga.Salario,
-                vaga.Localizacao,
-                links = new List<object>
+                result = new VagaOutput
                 {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "update", href = url, method = "PUT" },
-                    new { rel = "delete", href = url, method = "DELETE" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
-            };
-
-            return Created(url, result);
+                    IdVaga = vaga.IdVaga,
+                    Titulo = vaga.Titulo,
+                    Descricao = vaga.Descricao,
+                    NivelExperiencia = vaga.NivelExperiencia,
+                    Salario = vaga.Salario,
+                    Localizacao = vaga.Localizacao
+                },
+                links = GenerateLinks(vaga.IdVaga)
+            });
         }
-
 
         // ============================================================
         // PUT: api/v1/vaga/{id}
         // ============================================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Vaga vagaAtualizada)
+        public async Task<IActionResult> Update(int id, [FromBody] VagaUpdateInput input)
         {
-            if (vagaAtualizada == null || id != vagaAtualizada.IdVaga)
-                return BadRequest(new { mensagem = "O ID da URL não corresponde ao corpo da requisição." });
-
             var vaga = await _context.Vagas.FindAsync(id);
             if (vaga == null)
                 return NotFound(new { mensagem = "Vaga não encontrada." });
 
-            vaga.Titulo = vagaAtualizada.Titulo ?? vaga.Titulo;
-            vaga.Descricao = vagaAtualizada.Descricao ?? vaga.Descricao;
-            vaga.NivelExperiencia = vagaAtualizada.NivelExperiencia ?? vaga.NivelExperiencia;
-            vaga.Localizacao = vagaAtualizada.Localizacao ?? vaga.Localizacao;
+            vaga.Titulo = !string.IsNullOrWhiteSpace(input.Titulo) ? input.Titulo! : vaga.Titulo;
+            vaga.Descricao = !string.IsNullOrWhiteSpace(input.Descricao) ? input.Descricao! : vaga.Descricao;
+            vaga.NivelExperiencia = !string.IsNullOrWhiteSpace(input.NivelExperiencia) ? input.NivelExperiencia! : vaga.NivelExperiencia;
+            vaga.Localizacao = !string.IsNullOrWhiteSpace(input.Localizacao) ? input.Localizacao! : vaga.Localizacao;
 
-            
-            vaga.Salario = vagaAtualizada.Salario ?? vaga.Salario;
+            if (input.Salario.HasValue && input.Salario > 0)
+                vaga.Salario = input.Salario.Value;
 
-            _context.Entry(vaga).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
-
 
         // ============================================================
         // DELETE: api/v1/vaga/{id}
@@ -167,14 +171,22 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
+        // ============================================================
+        // HATEOAS HELPERS
+        // ============================================================
+        private IEnumerable<object> GenerateLinks(int id) =>
+            new List<object>
+            {
+                new { rel = "self", href = GetByIdUrl(id), method = "GET" },
+                new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
+                new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
+                new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+            };
 
-        // Métodos auxiliares HATEOAS
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Vaga", new { id })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Vaga", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Vaga", new { page, pageSize })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Vaga", new { page, pageSize }) ?? string.Empty;
     }
 }

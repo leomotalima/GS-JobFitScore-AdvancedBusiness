@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -118,12 +119,18 @@ namespace JobFitScoreAPI.Controllers.v1
         // PUT: api/v1/habilidade/{id}
         // ============================================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Habilidade habilidade)
+        public async Task<IActionResult> Update(int id, [FromBody] Habilidade atualizada)
         {
-            if (id != habilidade.IdHabilidade)
-                return BadRequest(new { mensagem = "O ID da URL não corresponde ao corpo da requisição." });
+            if (atualizada == null)
+                return BadRequest(new { mensagem = "Dados inválidos." });
 
-            _context.Entry(habilidade).State = EntityState.Modified;
+            var habilidade = await _context.Habilidades.FindAsync(id);
+            if (habilidade == null)
+                return NotFound(new { mensagem = "Habilidade não encontrada." });
+
+            habilidade.Nome = atualizada.Nome ?? habilidade.Nome;
+            habilidade.Descricao = atualizada.Descricao ?? habilidade.Descricao;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -146,7 +153,7 @@ namespace JobFitScoreAPI.Controllers.v1
         }
 
         // ============================================================
-        // Métodos auxiliares HATEOAS
+        // MÉTODOS AUXILIARES HATEOAS
         // ============================================================
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(
@@ -154,7 +161,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 action: nameof(GetById),
                 controller: "Habilidade",
                 values: new { id }
-            ) ?? string.Empty; 
+            ) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
             _linkGenerator.GetUriByAction(
@@ -162,6 +169,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 action: nameof(GetAll),
                 controller: "Habilidade",
                 values: new { page, pageSize }
-            ) ?? string.Empty; 
+            ) ?? string.Empty;
     }
 }
