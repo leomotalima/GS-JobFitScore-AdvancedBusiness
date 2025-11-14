@@ -27,11 +27,20 @@ namespace JobFitScoreAPI.Controllers.v1
         [HttpPost]
         public IActionResult Login([FromBody] LoginDto login)
         {
+            if (login == null || string.IsNullOrEmpty(login.Email) || string.IsNullOrEmpty(login.Senha))
+                return BadRequest(new { message = "Dados inválidos." });
+
             var usuario = _context.Usuarios
-                .FirstOrDefault(u => u.Email == login.Email && u.Senha == login.Senha);
+                .FirstOrDefault(u => u.Email == login.Email);
 
             if (usuario == null)
                 return NotFound(new { message = "Usuário ou senha inválidos." });
+
+            
+            bool senhaOk = BCrypt.Net.BCrypt.Verify(login.Senha, usuario.Senha);
+
+            if (!senhaOk)
+                return Unauthorized(new { message = "Usuário ou senha inválidos." });
 
             var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
 

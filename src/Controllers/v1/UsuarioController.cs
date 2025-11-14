@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using JobFitScoreAPI.Dtos.Usuario;
+using BCrypt.Net;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
@@ -36,6 +38,13 @@ namespace JobFitScoreAPI.Controllers.v1
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .AsNoTracking()
+                .Select(u => new UsuarioOutput
+                {
+                    IdUsuario = u.IdUsuario,
+                    Nome = u.Nome,
+                    Email = u.Email,
+                    Habilidades = u.Habilidades
+                })
                 .ToListAsync();
 
             var result = new
@@ -66,21 +75,8 @@ namespace JobFitScoreAPI.Controllers.v1
             if (usuario == null)
                 return NotFound(new { mensagem = "Usuário não encontrado." });
 
-            var result = new
-            {
-                usuario.IdUsuario,
-                usuario.Nome,
-                usuario.Email,
-                usuario.Senha,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
-                    new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
-            };
-
+            var result = new UserOutputForDetails(usuario.IdUsuario, usuario.Nome, usuario.Email, usuario.Habilidades, GenerateLinks(id));
+            
             return Ok(result);
         }
 
@@ -88,43 +84,49 @@ namespace JobFitScoreAPI.Controllers.v1
         // POST: api/v1/usuario
         // ============================================================
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Usuario usuario)
+        public async Task<IActionResult> Create([FromBody] UsuarioInput input)
         {
-            if (usuario == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var usuario = new Usuario
+            {
+                Nome = input.Nome,
+                Email = input.Email,
+                Habilidades = input.Habilidades,
+                Senha = BCrypt.Net.BCrypt.HashPassword(input.Senha)
+            };
 
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
             var url = GetByIdUrl(usuario.IdUsuario);
 
-            var result = new
+            var result = new UsuarioOutput
             {
-                usuario.IdUsuario,
-                usuario.Nome,
-                usuario.Email,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "update", href = url, method = "PUT" },
-                    new { rel = "delete", href = url, method = "DELETE" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
+                IdUsuario = usuario.IdUsuario,
+                Nome = usuario.Nome,
+                Email = usuario.Email,
+                Habilidades = usuario.Habilidades
             };
 
-            return Created(url, result);
+            return Created(url, new { result, links = GenerateLinks(usuario.IdUsuario) });
         }
 
         // ============================================================
         // PUT: api/v1/usuario/{id}
         // ============================================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Usuario usuario)
+        public async Task<IActionResult> Update(int id, [FromBody] UsuarioUpdateInput input)
         {
-            if (id != usuario.IdUsuario)
-                return BadRequest(new { mensagem = "O ID da URL não corresponde ao corpo da requisição." });
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { mensagem = "Usuário não encontrado." });
 
-            _context.Entry(usuario).State = EntityState.Modified;
+            usuario.Nome = input.Nome;
+            usuario.Email = input.Email;
+            usuario.Habilidades = input.Habilidades;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -147,22 +149,24 @@ namespace JobFitScoreAPI.Controllers.v1
         }
 
         // ============================================================
-        // Métodos auxiliares HATEOAS
+        // MÉTODOS AUXILIARES - URLs e HATEOAS
         // ============================================================
+        private IEnumerable<object> GenerateLinks(int id) =>
+            new List<object>
+            {
+                new { rel = "self", href = GetByIdUrl(id), method = "GET" },
+                new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
+                new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
+                new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+            };
+
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetById),
-                controller: "Usuario",
-                values: new { id }
-            ) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Usuario", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetAll),
-                controller: "Usuario",
-                values: new { page, pageSize }
-            ) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Usuario", new { page, pageSize }) ?? string.Empty;
     }
+
+    // DTO opcional para deixar o GET/{id} mais limpo
+    public record UserOutputForDetails(int IdUsuario, string Nome, string Email, string? Habilidades, IEnumerable<object> Links);
 }

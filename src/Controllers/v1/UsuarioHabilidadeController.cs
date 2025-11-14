@@ -45,7 +45,12 @@ namespace JobFitScoreAPI.Controllers.v1
             _context.UsuarioHabilidades.Add(usuarioHabilidade);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetAll), usuarioHabilidade);
+            return CreatedAtAction(nameof(GetAll), new
+            {
+                usuarioHabilidade.IdUsuarioHabilidade,
+                usuarioHabilidade.UsuarioId,
+                usuarioHabilidade.HabilidadeId
+            }, usuarioHabilidade);
         }
 
         // ============================================================

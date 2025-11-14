@@ -56,6 +56,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
+
         // ============================================================
         // GET: api/v1/vaga/{id}
         // ============================================================
@@ -85,6 +86,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
             return Ok(result);
         }
+
 
         // ============================================================
         // POST: api/v1/vaga
@@ -120,6 +122,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Created(url, result);
         }
 
+
         // ============================================================
         // PUT: api/v1/vaga/{id}
         // ============================================================
@@ -133,17 +136,20 @@ namespace JobFitScoreAPI.Controllers.v1
             if (vaga == null)
                 return NotFound(new { mensagem = "Vaga não encontrada." });
 
-            vaga.Titulo = vagaAtualizada.Titulo;
-            vaga.Descricao = vagaAtualizada.Descricao;
-            vaga.NivelExperiencia = vagaAtualizada.NivelExperiencia;
-            vaga.Salario = vagaAtualizada.Salario;
-            vaga.Localizacao = vagaAtualizada.Localizacao;
+            vaga.Titulo = vagaAtualizada.Titulo ?? vaga.Titulo;
+            vaga.Descricao = vagaAtualizada.Descricao ?? vaga.Descricao;
+            vaga.NivelExperiencia = vagaAtualizada.NivelExperiencia ?? vaga.NivelExperiencia;
+            vaga.Localizacao = vagaAtualizada.Localizacao ?? vaga.Localizacao;
+
+            
+            vaga.Salario = vagaAtualizada.Salario ?? vaga.Salario;
 
             _context.Entry(vaga).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         // ============================================================
         // DELETE: api/v1/vaga/{id}
@@ -161,23 +167,14 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        // ============================================================
+
         // Métodos auxiliares HATEOAS
-        // ============================================================
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetById),
-                controller: "Vaga",
-                values: new { id }
-            ) ?? string.Empty; 
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Vaga", new { id })
+            ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetAll),
-                controller: "Vaga",
-                values: new { page, pageSize }
-            ) ?? string.Empty; 
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Vaga", new { page, pageSize })
+            ?? string.Empty;
     }
 }
