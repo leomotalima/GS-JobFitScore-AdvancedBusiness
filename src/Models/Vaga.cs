@@ -15,16 +15,16 @@ namespace JobFitScoreAPI.Models
         public string Titulo { get; set; } = string.Empty;
 
         [Column("descricao")]
-        public string? Descricao { get; set; }
+        public string Descricao { get; set; } = string.Empty; 
 
         [Column("nivel_experiencia")]
-        public string? NivelExperiencia { get; set; }
+        public string NivelExperiencia { get; set; } = string.Empty;
 
         [Column("salario")]
         public decimal? Salario { get; set; }
 
         [Column("localizacao")]
-        public string? Localizacao { get; set; }
+        public string Localizacao { get; set; } = string.Empty; 
 
         [Column("habilidades")]
         public string? Habilidades { get; set; }
