@@ -224,7 +224,10 @@ ConnectionStrings__OracleConnection=User Id=${ORACLE_USER_ID};Password=${ORACLE_
 Execute os seguintes comandos no terminal:
 
 ```bash
-# Instalar Entity Framework CLI globalmente
+# Entrar na pasta do projeto .NET
+cd src
+
+# Instalar Entity Framework CLI globalmente (se ainda não tiver)
 dotnet tool install --global dotnet-ef
 
 # Restaurar pacotes NuGet
@@ -235,7 +238,6 @@ dotnet build
 
 # Aplicar migrations no banco de dados
 dotnet ef database update
-```
 
 ---
 

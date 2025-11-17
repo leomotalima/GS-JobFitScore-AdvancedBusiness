@@ -35,6 +35,7 @@ namespace JobFitScoreAPI.Data
 
             modelBuilder.Entity<UsuarioHabilidade>()
                 .HasKey(uh => new { uh.UsuarioId, uh.HabilidadeId });
+                
 
             modelBuilder.Entity<VagaHabilidade>()
                 .HasKey(vh => new { vh.VagaId, vh.HabilidadeId });
