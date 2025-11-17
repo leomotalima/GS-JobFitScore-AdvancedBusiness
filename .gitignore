@@ -1,19 +1,10 @@
-# Build
-/bin/
-/obj/
-
-# Usuário e IDE
-*.user
-*.suo
-.vs/
-.idea/
-.vscode/
-
-# Logs
+bin/
+obj/
+*.pdb
+*.dll
+*.exe
+*.cache
 *.log
+*.sourcelink.json
+*.db
 
-# Ambiente
-.env
-
-# JSON temporários
-*.json.tmp
