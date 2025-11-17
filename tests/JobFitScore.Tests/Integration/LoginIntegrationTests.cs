@@ -15,18 +15,6 @@ public class LoginIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Deve_Fazer_Login_Com_Sucesso()
     {
-        // Primeiro cria o usuário para testar login
-        var novoUsuario = new
-        {
-            nome = "Login Teste",
-            email = "login@teste.com",
-            senha = "123456",
-            habilidades = ""
-        };
-
-        await _client.PostAsJsonAsync("/api/v1/usuario", novoUsuario);
-
-        // Tenta fazer login
         var loginData = new
         {
             email = "login@teste.com",
@@ -35,9 +23,10 @@ public class LoginIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 
         var response = await _client.PostAsJsonAsync("/api/v1/login", loginData);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
         var json = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(json); // Para debug
+
+        response.EnsureSuccessStatusCode(); // 200 OK
 
         Assert.Contains("token", json.ToLower());
         Assert.Contains("login@teste.com", json.ToLower());
