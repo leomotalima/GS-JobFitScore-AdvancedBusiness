@@ -10,6 +10,5 @@ namespace JobFitScoreAPI.Dtos.Candidatura
 
         // Vaga
         public string TituloVaga { get; set; } = string.Empty;
-        public string? NivelExperiencia { get; set; }
     }
 }

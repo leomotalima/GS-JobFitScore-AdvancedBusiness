@@ -1,153 +1,177 @@
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using JobFitScoreAPI.Dtos.Usuario;
+using JobFitScoreAPI.Hateoas;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
+    [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/usuario")]
-    [Asp.Versioning.ApiVersion("1.0")]
+    [Tags("Usuários")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    [Authorize]
     public class UsuarioController : ControllerBase
     {
         private readonly AppDbContext _context;
+        public UsuarioController(AppDbContext context) => _context = context;
 
-        public UsuarioController(AppDbContext context)
+        // Classe de resposta padronizada
+        public class ApiResponse<T>
         {
-            _context = context;
+            public bool Success { get; set; }
+            public string Message { get; set; } = string.Empty;
+            public T? Data { get; set; }
+
+            public static ApiResponse<T> Ok(T? data, string message = "") =>
+                new ApiResponse<T> { Success = true, Message = message, Data = data };
+
+            public static ApiResponse<T> Fail(string message) =>
+                new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // ============================================================
-        // GET: api/v1/usuario?page=1&pageSize=5
-        // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
+        // GET - Listar usuários
+        [HttpGet(Name = "GetUsuarios")]
+        [SwaggerOperation(Summary = "Lista todos os usuários", Description = "Retorna uma lista paginada de usuários.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Lista de usuários retornada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Erro interno no servidor")]
+        public async Task<IActionResult> GetUsuarios(int page = 1, int pageSize = 10)
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
+            page = Math.Max(page, 1);
+            pageSize = Math.Max(pageSize, 1);
 
-            var total = await _context.Usuarios.CountAsync();
+            var totalItems = await _context.Usuarios.CountAsync();
 
             var usuarios = await _context.Usuarios
                 .OrderBy(u => u.Nome)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(u => new
+                .Select(u => new UsuarioOutput
                 {
-                    u.IdUsuario,
-                    u.Nome,
-                    Email = u.Email ?? string.Empty
+                    IdUsuario = u.IdUsuario,
+                    Nome = u.Nome,
+                    Email = u.Email
                 })
                 .ToListAsync();
 
-            var result = new
+            var meta = new
             {
-                totalItems = total,
-                currentPage = page,
+                totalItems,
+                page,
                 pageSize,
-                totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = usuarios
+                totalPages = Math.Ceiling((double)totalItems / pageSize)
             };
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.Ok(new { meta, data = usuarios }, "Usuários listados com sucesso."));
         }
 
-        // GET: api/v1/usuario/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // GET - Buscar usuário por ID
+        [HttpGet("{id}", Name = "GetUsuario")]
+        [SwaggerOperation(Summary = "Obtém um usuário específico", Description = "Retorna os detalhes de um usuário pelo ID.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Usuário encontrado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
+        public async Task<IActionResult> GetUsuario(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
-            if (usuario == null)
-                return NotFound(new { mensagem = "Usuário não encontrado." });
+            var usuario = await _context.Usuarios
+                .Where(u => u.IdUsuario == id)
+                .Select(u => new UsuarioOutput
+                {
+                    IdUsuario = u.IdUsuario,
+                    Nome = u.Nome,
+                    Email = u.Email
+                })
+                .FirstOrDefaultAsync();
 
-            var result = new
+            if (usuario == null)
+                return NotFound(ApiResponse<string>.Fail("Usuário não encontrado."));
+
+            return Ok(ApiResponse<UsuarioOutput>.Ok(usuario, "Usuário encontrado com sucesso."));
+        }
+
+        // POST - Criar usuário
+        [HttpPost(Name = "CreateUsuario")]
+        [SwaggerOperation(Summary = "Cria um novo usuário", Description = "Adiciona um novo usuário no sistema.")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Usuário criado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição ou dados inválidos")]
+        public async Task<IActionResult> CreateUsuario([FromBody] UsuarioInput input)
+        {
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
+
+            var usuario = new Usuario
             {
-                usuario.IdUsuario,
-                usuario.Nome,
-                Email = usuario.Email ?? string.Empty
+                Nome = input.Nome,
+                Email = input.Email,
+                Senha = input.Senha
             };
-
-            return Ok(result);
-        }
-
-        
-        // POST: api/v1/usuario
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Usuario usuario)
-        {
-            if (usuario == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
 
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
 
-            var result = new
+            var output = new UsuarioOutput
             {
-                usuario.IdUsuario,
-                usuario.Nome,
-                Email = usuario.Email ?? string.Empty
+                IdUsuario = usuario.IdUsuario,
+                Nome = usuario.Nome,
+                Email = usuario.Email
             };
 
-            return CreatedAtAction(nameof(GetById), new { id = usuario.IdUsuario, version = "1.0" }, result);
+            return CreatedAtAction(nameof(GetUsuario), new { id = usuario.IdUsuario },
+                ApiResponse<UsuarioOutput>.Ok(output, "Usuário criado com sucesso."));
         }
 
-        
-        // PUT: api/v1/usuario/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Usuario updated)
+        // PUT - Atualizar usuário
+        [HttpPut("{id}", Name = "UpdateUsuario")]
+        [SwaggerOperation(Summary = "Atualiza um usuário existente", Description = "Modifica informações de um usuário.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Usuário atualizado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro de validação ou dados inválidos")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
+        public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UsuarioUpdateInput input)
         {
-            if (updated == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
 
             var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
-                return NotFound(new { mensagem = "Usuário não encontrado." });
+                return NotFound(ApiResponse<string>.Fail("Usuário não encontrado."));
 
-            usuario.Nome = updated.Nome ?? usuario.Nome;
-            usuario.Email = updated.Email ?? usuario.Email;
-            usuario.Senha = updated.Senha ?? usuario.Senha;
-            usuario.RefreshToken = updated.RefreshToken ?? usuario.RefreshToken;
-            usuario.ExpiraRefreshToken = updated.ExpiraRefreshToken ?? usuario.ExpiraRefreshToken;
+            usuario.Nome = input.Nome;
+            usuario.Email = input.Email;
+            usuario.Senha = input.Senha ?? usuario.Senha;
 
+            _context.Entry(usuario).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            var output = new UsuarioOutput
+            {
+                IdUsuario = usuario.IdUsuario,
+                Nome = usuario.Nome,
+                Email = usuario.Email
+            };
+
+            return Ok(ApiResponse<UsuarioOutput>.Ok(output, "Usuário atualizado com sucesso."));
         }
 
-        
-        // DELETE: api/v1/usuario/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        // DELETE - Remover usuário
+        [HttpDelete("{id}", Name = "DeleteUsuario")]
+        [SwaggerOperation(Summary = "Remove um usuário", Description = "Exclui um usuário cadastrado do sistema.")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Usuário removido com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
+        public async Task<IActionResult> DeleteUsuario(int id)
         {
             var usuario = await _context.Usuarios.FindAsync(id);
             if (usuario == null)
-                return NotFound(new { mensagem = "Usuário não encontrado." });
+                return NotFound(ApiResponse<string>.Fail("Usuário não encontrado."));
 
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        // GET: api/v1/usuario/search?nome=abc
-        [HttpGet("search")]
-        public async Task<IActionResult> Search(string? nome)
-        {
-            var query = _context.Usuarios.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(nome))
-                query = query.Where(u => u.Nome.Contains(nome));
-
-            var result = await query
-                .Select(u => new
-                {
-                    u.IdUsuario,
-                    u.Nome,
-                    Email = u.Email ?? string.Empty
-                })
-                .ToListAsync();
-
-            return Ok(result);
         }
     }
 }

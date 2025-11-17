@@ -4,6 +4,7 @@ namespace JobFitScoreAPI.Dtos.Curso
     {
         public int IdCurso { get; set; }
         public string Nome { get; set; } = string.Empty;
-        public string Area { get; set; } = string.Empty;
+        public string? Instituicao { get; set; }
+        public int? CargaHoraria { get; set; }
     }
 }

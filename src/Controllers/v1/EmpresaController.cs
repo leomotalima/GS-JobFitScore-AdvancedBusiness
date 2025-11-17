@@ -1,14 +1,21 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using JobFitScoreAPI.Dtos.Empresa;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/empresa")]
+    [Tags("Empresas")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    [Authorize]
     public class EmpresaController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -20,143 +27,165 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        
-        // GET: api/v1/empresa?page=1&pageSize=5
-        [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
+        // Classe de resposta padronizada
+        public class ApiResponse<T>
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
+            public bool Success { get; set; }
+            public string Message { get; set; } = string.Empty;
+            public T? Data { get; set; }
 
-            var total = await _context.Empresas.CountAsync();
+            public static ApiResponse<T> Ok(T? data, string message = "") =>
+                new ApiResponse<T> { Success = true, Message = message, Data = data };
+
+            public static ApiResponse<T> Fail(string message) =>
+                new ApiResponse<T> { Success = false, Message = message };
+        }
+
+        // GET - Listar empresas
+        [HttpGet(Name = "GetEmpresas")]
+        [SwaggerOperation(Summary = "Lista todas as empresas", Description = "Retorna uma lista paginada de empresas.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Lista de empresas retornada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Erro interno no servidor")]
+        public async Task<IActionResult> GetEmpresas(int page = 1, int pageSize = 10)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Max(pageSize, 1);
+
+            var totalItems = await _context.Empresas.CountAsync();
 
             var empresas = await _context.Empresas
-                .Include(e => e.Vagas)
                 .OrderBy(e => e.Nome)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(e => new
+                .Select(e => new EmpresaOutput
                 {
-                    e.IdEmpresa,
-                    e.Nome,
-                    e.Cnpj,
-                    e.Email,
-                   
-                    Vagas = (e.Vagas ?? Enumerable.Empty<Vaga>())
-                        .Select(v => new { v.IdVaga, v.Titulo })
-                        .ToList()
+                    IdEmpresa = e.IdEmpresa,
+                    Nome = e.Nome,
+                    Cnpj = e.Cnpj,
+                    Email = e.Email
                 })
                 .ToListAsync();
 
-            var result = new
+            var meta = new
             {
-                totalItems = total,
-                currentPage = page,
+                totalItems,
+                page,
                 pageSize,
-                totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = empresas,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
-                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
-                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
-                }
+                totalPages = Math.Ceiling((double)totalItems / pageSize)
             };
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.Ok(new { meta, data = empresas }, "Empresas listadas com sucesso."));
         }
 
-        
-        // GET: api/v1/empresa/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // GET - Buscar empresa por ID
+        [HttpGet("{id}", Name = "GetEmpresa")]
+        [SwaggerOperation(Summary = "Obtém uma empresa específica", Description = "Retorna os detalhes de uma empresa pelo ID.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Empresa encontrada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Empresa não encontrada")]
+        public async Task<IActionResult> GetEmpresa(int id)
         {
             var empresa = await _context.Empresas
-                .Include(e => e.Vagas)
-                .FirstOrDefaultAsync(e => e.IdEmpresa == id);
+                .Where(e => e.IdEmpresa == id)
+                .Select(e => new EmpresaOutput
+                {
+                    IdEmpresa = e.IdEmpresa,
+                    Nome = e.Nome,
+                    Cnpj = e.Cnpj,
+                    Email = e.Email
+                })
+                .FirstOrDefaultAsync();
 
             if (empresa == null)
-                return NotFound(new { mensagem = "Empresa não encontrada." });
+                return NotFound(ApiResponse<string>.Fail("Empresa não encontrada."));
 
             var result = new
             {
-                empresa.IdEmpresa,
-                empresa.Nome,
-                empresa.Cnpj,
-                empresa.Email,
-                Vagas = (empresa.Vagas ?? Enumerable.Empty<Vaga>())
-                    .Select(v => new { v.IdVaga, v.Titulo })
-                    .ToList(),
+                empresa,
                 links = new List<object>
                 {
                     new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
                 }
             };
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.Ok(result, "Empresa encontrada com sucesso."));
         }
 
-        
-        // POST: api/v1/empresa
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Empresa empresa)
+        // POST - Criar empresa
+        [HttpPost(Name = "CreateEmpresa")]
+        [SwaggerOperation(Summary = "Cria uma nova empresa", Description = "Adiciona uma nova empresa no sistema.")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Empresa criada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição ou dados inválidos")]
+        public async Task<IActionResult> CreateEmpresa([FromBody] EmpresaInput input)
         {
-            if (empresa == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
+
+            var empresa = new Empresa
+            {
+                Nome = input.Nome,
+                Cnpj = input.Cnpj,
+                Email = input.Email,
+                Senha = input.Senha ?? string.Empty
+            };
 
             _context.Empresas.Add(empresa);
             await _context.SaveChangesAsync();
 
-            var url = GetByIdUrl(empresa.IdEmpresa);
-
-            var result = new
+            var output = new EmpresaOutput
             {
-                empresa.IdEmpresa,
-                empresa.Nome,
-                empresa.Cnpj,
-                empresa.Email,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
+                IdEmpresa = empresa.IdEmpresa,
+                Nome = empresa.Nome,
+                Cnpj = empresa.Cnpj,
+                Email = empresa.Email
             };
 
-            return Created(url, result);
+            return CreatedAtAction(nameof(GetEmpresa), new { id = empresa.IdEmpresa },
+                ApiResponse<EmpresaOutput>.Ok(output, "Empresa criada com sucesso."));
         }
 
-        
-        // PUT: api/v1/empresa/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Empresa updated)
+        // PUT - Atualizar empresa
+        [HttpPut("{id}", Name = "UpdateEmpresa")]
+        [SwaggerOperation(Summary = "Atualiza uma empresa existente", Description = "Modifica informações de uma empresa.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Empresa atualizada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro de validação ou dados inválidos")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Empresa não encontrada")]
+        public async Task<IActionResult> UpdateEmpresa(int id, [FromBody] EmpresaUpdateInput input)
         {
-            if (updated == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
 
             var empresa = await _context.Empresas.FindAsync(id);
             if (empresa == null)
-                return NotFound(new { mensagem = "Empresa não encontrada." });
+                return NotFound(ApiResponse<string>.Fail("Empresa não encontrada."));
 
-            empresa.Nome = updated.Nome ?? empresa.Nome;
-            empresa.Cnpj = updated.Cnpj ?? empresa.Cnpj;
-            empresa.Email = updated.Email ?? empresa.Email;
-            empresa.Senha = updated.Senha ?? empresa.Senha;
-            empresa.RefreshToken = updated.RefreshToken ?? empresa.RefreshToken;
-            empresa.ExpiraRefreshToken = updated.ExpiraRefreshToken ?? empresa.ExpiraRefreshToken;
+            empresa.Nome = input.Nome ?? empresa.Nome;
+            empresa.Email = input.Email ?? empresa.Email;
 
+            _context.Entry(empresa).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            var output = new EmpresaOutput
+            {
+                IdEmpresa = empresa.IdEmpresa,
+                Nome = empresa.Nome,
+                Cnpj = empresa.Cnpj,
+                Email = empresa.Email
+            };
+
+            return Ok(ApiResponse<EmpresaOutput>.Ok(output, "Empresa atualizada com sucesso."));
         }
 
-        
-        // DELETE: api/v1/empresa/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        // DELETE - Remover empresa
+        [HttpDelete("{id}", Name = "DeleteEmpresa")]
+        [SwaggerOperation(Summary = "Remove uma empresa", Description = "Exclui uma empresa cadastrada do sistema.")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Empresa removida com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Empresa não encontrada")]
+        public async Task<IActionResult> DeleteEmpresa(int id)
         {
             var empresa = await _context.Empresas.FindAsync(id);
             if (empresa == null)
-                return NotFound(new { mensagem = "Empresa não encontrada." });
+                return NotFound(ApiResponse<string>.Fail("Empresa não encontrada."));
 
             _context.Empresas.Remove(empresa);
             await _context.SaveChangesAsync();
@@ -164,10 +193,11 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
+        // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Empresa", new { id }) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetEmpresa), "Empresa", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Empresa", new { page, pageSize }) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetEmpresas), "Empresa", new { page, pageSize }) ?? string.Empty;
     }
 }

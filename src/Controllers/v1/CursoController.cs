@@ -1,169 +1,179 @@
-using Microsoft.AspNetCore.Mvc;   
-using Asp.Versioning;              
-using Microsoft.EntityFrameworkCore; 
-using JobFitScoreAPI.Data;         
+using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
-
+using JobFitScoreAPI.Dtos.Curso;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [Asp.Versioning.ApiVersion("1.0")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/curso")]
+    [Tags("Cursos")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    [Authorize]
     public class CursoController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly LinkGenerator _linkGenerator;
 
-        public CursoController(AppDbContext context, LinkGenerator linkGenerator)
+        public CursoController(AppDbContext context) => _context = context;
+
+        // Classe de resposta padronizada
+        public class ApiResponse<T>
         {
-            _context = context;
-            _linkGenerator = linkGenerator;
+            public bool Success { get; set; }
+            public string Message { get; set; } = string.Empty;
+            public T? Data { get; set; }
+
+            public static ApiResponse<T> Ok(T? data, string message = "") =>
+                new ApiResponse<T> { Success = true, Message = message, Data = data };
+
+            public static ApiResponse<T> Fail(string message) =>
+                new ApiResponse<T> { Success = false, Message = message };
         }
 
-       
-        // GET: api/v1/curso?page=1&pageSize=5
-        [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
+        // GET - Listar cursos
+        [HttpGet(Name = "GetCursos")]
+        [SwaggerOperation(Summary = "Lista todos os cursos", Description = "Retorna uma lista paginada de cursos.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Lista de cursos retornada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Erro interno no servidor")]
+        public async Task<IActionResult> GetCursos(int page = 1, int pageSize = 10)
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
+            page = Math.Max(page, 1);
+            pageSize = Math.Max(pageSize, 1);
 
-            var total = await _context.Cursos.CountAsync();
+            var totalItems = await _context.Cursos.CountAsync();
 
             var cursos = await _context.Cursos
-                .Include(c => c.Usuario)
                 .OrderBy(c => c.Nome)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(c => new
+                .Select(c => new CursoOutput
                 {
-                    c.IdCurso,
-                    c.Nome,
-                    c.Instituicao,
-                    c.CargaHoraria,
-                    Usuario = c.Usuario != null ? c.Usuario.Nome : "Usuário não definido"
+                    IdCurso = c.IdCurso,
+                    Nome = c.Nome,
+                    Instituicao = c.Instituicao,
+                    CargaHoraria = c.CargaHoraria
                 })
                 .ToListAsync();
 
-            var result = new
+            var meta = new
             {
-                totalItems = total,
-                currentPage = page,
+                totalItems,
+                page,
                 pageSize,
-                totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = cursos,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
-                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
-                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
-                }
+                totalPages = Math.Ceiling((double)totalItems / pageSize)
             };
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.Ok(new { meta, data = cursos }, "Cursos listados com sucesso."));
         }
 
-      
-        // GET: api/v1/curso/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // GET - Buscar curso por ID
+        [HttpGet("{id}", Name = "GetCurso")]
+        [SwaggerOperation(Summary = "Obtém um curso específico", Description = "Retorna os detalhes de um curso pelo ID.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Curso encontrado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado")]
+        public async Task<IActionResult> GetCurso(int id)
         {
             var curso = await _context.Cursos
-                .Include(c => c.Usuario)
-                .FirstOrDefaultAsync(c => c.IdCurso == id);
+                .Where(c => c.IdCurso == id)
+                .Select(c => new CursoOutput
+                {
+                    IdCurso = c.IdCurso,
+                    Nome = c.Nome,
+                    Instituicao = c.Instituicao,
+                    CargaHoraria = c.CargaHoraria
+                })
+                .FirstOrDefaultAsync();
 
             if (curso == null)
-                return NotFound(new { mensagem = "Curso não encontrado." });
+                return NotFound(ApiResponse<string>.Fail("Curso não encontrado."));
 
-            var result = new
-            {
-                curso.IdCurso,
-                curso.Nome,
-                curso.Instituicao,
-                curso.CargaHoraria,
-                Usuario = curso.Usuario != null ? curso.Usuario.Nome : "Usuário não definido",
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
-            };
-
-            return Ok(result);
+            return Ok(ApiResponse<CursoOutput>.Ok(curso, "Curso encontrado com sucesso."));
         }
 
-        
-        // POST: api/v1/curso
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Curso curso)
+        // POST - Criar curso
+        [HttpPost(Name = "CreateCurso")]
+        [SwaggerOperation(Summary = "Cria um novo curso", Description = "Adiciona um novo curso no sistema.")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Curso criado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição ou dados inválidos")]
+        public async Task<IActionResult> CreateCurso([FromBody] CursoInput input)
         {
-            if (curso == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
+
+            var curso = new Curso
+            {
+                Nome = input.Nome,
+                Instituicao = input.Instituicao
+            };
 
             _context.Cursos.Add(curso);
             await _context.SaveChangesAsync();
 
-            var url = GetByIdUrl(curso.IdCurso);
-
-            var result = new
+            var output = new CursoOutput
             {
-                curso.IdCurso,
-                curso.Nome,
-                curso.Instituicao,
-                curso.CargaHoraria,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
+                IdCurso = curso.IdCurso,
+                Nome = curso.Nome,
+                Instituicao = curso.Instituicao,
+                CargaHoraria = curso.CargaHoraria
             };
 
-            return Created(url, result);
+            return CreatedAtAction(nameof(GetCurso), new { id = curso.IdCurso },
+                ApiResponse<CursoOutput>.Ok(output, "Curso criado com sucesso."));
         }
 
-
-        // PUT: api/v1/curso/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Curso updated)
+        // PUT - Atualizar curso
+        [HttpPut("{id}", Name = "UpdateCurso")]
+        [SwaggerOperation(Summary = "Atualiza um curso existente", Description = "Modifica informações de um curso.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Curso atualizado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro de validação ou dados inválidos")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado")]
+        public async Task<IActionResult> UpdateCurso(int id, [FromBody] CursoInput input)
         {
-            if (updated == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
 
             var curso = await _context.Cursos.FindAsync(id);
             if (curso == null)
-                return NotFound(new { mensagem = "Curso não encontrado." });
+                return NotFound(ApiResponse<string>.Fail("Curso não encontrado."));
 
-            curso.Nome = updated.Nome ?? curso.Nome;
-            curso.Instituicao = updated.Instituicao ?? curso.Instituicao;
-            curso.CargaHoraria = updated.CargaHoraria ?? curso.CargaHoraria;
-            curso.UsuarioId = updated.UsuarioId != 0 ? updated.UsuarioId : curso.UsuarioId;
+            curso.Nome = input.Nome ?? curso.Nome;
+            curso.Instituicao = input.Instituicao ?? curso.Instituicao;
 
+            _context.Entry(curso).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return NoContent();
+
+            var output = new CursoOutput
+            {
+                IdCurso = curso.IdCurso,
+                Nome = curso.Nome,
+                Instituicao = curso.Instituicao,
+                CargaHoraria = curso.CargaHoraria
+            };
+
+            return Ok(ApiResponse<CursoOutput>.Ok(output, "Curso atualizado com sucesso."));
         }
 
-        
-        // DELETE: api/v1/curso/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        // DELETE - Remover curso
+        [HttpDelete("{id}", Name = "DeleteCurso")]
+        [SwaggerOperation(Summary = "Remove um curso", Description = "Exclui um curso cadastrado do sistema.")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Curso removido com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Curso não encontrado")]
+        public async Task<IActionResult> DeleteCurso(int id)
         {
             var curso = await _context.Cursos.FindAsync(id);
             if (curso == null)
-                return NotFound(new { mensagem = "Curso não encontrado." });
+                return NotFound(ApiResponse<string>.Fail("Curso não encontrado."));
 
             _context.Cursos.Remove(curso);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
-
-
-        // MÉTODOS AUXILIARES HATEOAS
-        private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Curso", new { id }) ?? string.Empty;
-
-        private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Curso", new { page, pageSize }) ?? string.Empty;
     }
 }
