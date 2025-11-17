@@ -15,8 +15,17 @@ using JobFitScoreAPI.Repository;
 using JobFitScoreAPI.Repository.Interfaces;
 using DotNetEnv;
 using Microsoft.ML;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ----------------------
+// Logging estruturado
+// ----------------------
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // ----------------------
 // Carregar .env (exceto em teste)
@@ -136,6 +145,19 @@ if (builder.Environment.EnvironmentName != "Testing")
 }
 
 builder.Services.AddAuthorization();
+
+// ----------------------
+// OpenTelemetry Tracing
+// ----------------------
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =>
+    {
+        tracerProviderBuilder
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("JobFitScoreAPI"))
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddConsoleExporter();
+    });
 
 // ----------------------
 // Build
