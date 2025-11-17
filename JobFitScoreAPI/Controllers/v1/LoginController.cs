@@ -4,12 +4,16 @@ using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
 using JobFitScoreAPI.Services;
 using Asp.Versioning;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v{version:apiVersion}/login")]
     [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/login")]
+    [Tags("Autenticação")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     public class LoginController : ControllerBase
     {
         private readonly JwtService _jwtService;
@@ -21,28 +25,59 @@ namespace JobFitScoreAPI.Controllers.v1
             _context = context;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Autenticar([FromBody] UsuarioLogin usuarioLogin)
+        // Classe padronizada de resposta
+        public class ApiResponse<T>
         {
-            if (usuarioLogin == null || string.IsNullOrEmpty(usuarioLogin.Email) || string.IsNullOrEmpty(usuarioLogin.Senha))
-                return BadRequest(new { mensagem = "Dados de login inválidos." });
+            public bool Success { get; set; }
+            public string Message { get; set; } = string.Empty;
+            public T? Data { get; set; }
 
-            // Usa FirstOrDefaultAsync para evitar exceção caso existam duplicados
+            public static ApiResponse<T> Ok(T? data, string message = "") =>
+                new ApiResponse<T> { Success = true, Message = message, Data = data };
+
+            public static ApiResponse<T> Fail(string message) =>
+                new ApiResponse<T> { Success = false, Message = message };
+        }
+
+        // POST - Autenticação do usuário
+        [HttpPost(Name = "Login")]
+        [SwaggerOperation(Summary = "Autentica um usuário", Description = "Valida credenciais e retorna um token JWT.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Login realizado com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Dados inválidos")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário ou senha inválidos")]
+        public async Task<IActionResult> Autenticar([FromBody] UsuarioLoginInput input)
+        {
+            if (input == null || string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
+                return BadRequest(ApiResponse<string>.Fail("Dados de login inválidos."));
+
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Email == usuarioLogin.Email);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email == input.Email);
 
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(usuarioLogin.Senha, usuario.Senha))
-                return Unauthorized(new { mensagem = "Usuário ou senha inválidos." });
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
+                return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
 
             var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
 
-            return Ok(new { token, email = usuario.Email, nome = usuario.Nome });
+            var data = new
+            {
+                token,
+                usuario = new
+                {
+                    id = usuario.IdUsuario,
+                    email = usuario.Email,
+                    nome = usuario.Nome
+                }
+            };
+
+            return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso."));
         }
     }
 
-    public class UsuarioLogin
+    // DTO de entrada
+    public class UsuarioLoginInput
     {
-        public string Email { get; set; } = null!;
-        public string Senha { get; set; } = null!;
+        public string Email { get; set; } = string.Empty;
+        public string Senha { get; set; } = string.Empty;
     }
 }

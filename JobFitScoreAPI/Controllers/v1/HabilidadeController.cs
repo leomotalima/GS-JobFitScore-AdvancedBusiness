@@ -1,15 +1,21 @@
-using Microsoft.AspNetCore.Mvc;   
-using Asp.Versioning;              
-using Microsoft.EntityFrameworkCore; 
-using JobFitScoreAPI.Data;         
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
+using Microsoft.EntityFrameworkCore;
+using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
-
+using JobFitScoreAPI.Dtos.Habilidade;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [Asp.Versioning.ApiVersion("1.0")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/habilidades")]
+    [Tags("Habilidades")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    [Authorize]
     public class HabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -21,59 +27,75 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-       
-        // GET: api/v1/habilidade?page=1&pageSize=10
-        [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
+        // Classe de resposta padronizada
+        public class ApiResponse<T>
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
+            public bool Success { get; set; }
+            public string Message { get; set; } = string.Empty;
+            public T? Data { get; set; }
 
-            var total = await _context.Habilidades.CountAsync();
+            public static ApiResponse<T> Ok(T? data, string message = "") =>
+                new ApiResponse<T> { Success = true, Message = message, Data = data };
+
+            public static ApiResponse<T> Fail(string message) =>
+                new ApiResponse<T> { Success = false, Message = message };
+        }
+
+        // GET - Listar habilidades
+        [HttpGet(Name = "GetHabilidades")]
+        [SwaggerOperation(Summary = "Lista todas as habilidades", Description = "Retorna uma lista paginada de habilidades.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Lista retornada com sucesso")]
+        public async Task<IActionResult> GetHabilidades(int page = 1, int pageSize = 10)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Max(pageSize, 1);
+
+            var totalItems = await _context.Habilidades.CountAsync();
 
             var habilidades = await _context.Habilidades
                 .OrderBy(h => h.Nome)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(h => new
+                .Select(h => new HabilidadeOutput
                 {
-                    h.IdHabilidade,
-                    h.Nome
+                    IdHabilidade = h.IdHabilidade,
+                    Nome = h.Nome
                 })
                 .ToListAsync();
 
-            var result = new
+            var meta = new
             {
-                totalItems = total,
-                currentPage = page,
+                totalItems,
+                page,
                 pageSize,
-                totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = habilidades,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
-                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
-                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
-                }
+                totalPages = Math.Ceiling((double)totalItems / pageSize)
             };
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.Ok(new { meta, data = habilidades }, "Habilidades listadas com sucesso."));
         }
 
-        
-        // GET: api/v1/habilidade/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // GET - Buscar habilidade por ID
+        [HttpGet("{id}", Name = "GetHabilidade")]
+        [SwaggerOperation(Summary = "Obtém uma habilidade específica", Description = "Retorna os detalhes de uma habilidade pelo ID.")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Habilidade encontrada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Habilidade não encontrada")]
+        public async Task<IActionResult> GetHabilidade(int id)
         {
-            var habilidade = await _context.Habilidades.FindAsync(id);
+            var habilidade = await _context.Habilidades
+                .Where(h => h.IdHabilidade == id)
+                .Select(h => new HabilidadeOutput
+                {
+                    IdHabilidade = h.IdHabilidade,
+                    Nome = h.Nome
+                })
+                .FirstOrDefaultAsync();
 
             if (habilidade == null)
-                return NotFound(new { mensagem = "Habilidade não encontrada." });
+                return NotFound(ApiResponse<string>.Fail("Habilidade não encontrada."));
 
             var result = new
             {
-                habilidade.IdHabilidade,
-                habilidade.Nome,
+                habilidade,
                 links = new List<object>
                 {
                     new { rel = "self", href = GetByIdUrl(id), method = "GET" },
@@ -81,63 +103,75 @@ namespace JobFitScoreAPI.Controllers.v1
                 }
             };
 
-            return Ok(result);
+            return Ok(ApiResponse<object>.Ok(result, "Habilidade encontrada com sucesso."));
         }
 
-       
-        // POST: api/v1/habilidade
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Habilidade habilidade)
+        // POST - Criar habilidade
+        [HttpPost(Name = "CreateHabilidade")]
+        [SwaggerOperation(Summary = "Cria uma nova habilidade", Description = "Adiciona uma nova habilidade no sistema.")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Habilidade criada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição")]
+        public async Task<IActionResult> CreateHabilidade([FromBody] HabilidadeInput input)
         {
-            if (habilidade == null || string.IsNullOrWhiteSpace(habilidade.Nome))
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null || string.IsNullOrWhiteSpace(input.Nome))
+                return BadRequest(ApiResponse<string>.Fail("Dados inválidos."));
+
+            var habilidade = new Habilidade
+            {
+                Nome = input.Nome
+            };
 
             _context.Habilidades.Add(habilidade);
             await _context.SaveChangesAsync();
 
-            var url = GetByIdUrl(habilidade.IdHabilidade);
-
-            var result = new
+            var output = new HabilidadeOutput
             {
-                habilidade.IdHabilidade,
-                habilidade.Nome,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
-                }
+                IdHabilidade = habilidade.IdHabilidade,
+                Nome = habilidade.Nome
             };
 
-            return Created(url, result);
+            return CreatedAtAction(nameof(GetHabilidade), new { id = habilidade.IdHabilidade },
+                ApiResponse<HabilidadeOutput>.Ok(output, "Habilidade criada com sucesso."));
         }
 
-      
-        // PUT: api/v1/habilidade/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Habilidade atualizada)
+        // PUT - Atualizar habilidade
+        [HttpPut("{id}", Name = "UpdateHabilidade")]
+        [SwaggerOperation(Summary = "Atualiza uma habilidade existente")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Habilidade atualizada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Dados inválidos")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Habilidade não encontrada")]
+        public async Task<IActionResult> UpdateHabilidade(int id, [FromBody] HabilidadeInput input)
         {
-            if (atualizada == null || string.IsNullOrWhiteSpace(atualizada.Nome))
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (input == null)
+                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
 
             var habilidade = await _context.Habilidades.FindAsync(id);
             if (habilidade == null)
-                return NotFound(new { mensagem = "Habilidade não encontrada." });
+                return NotFound(ApiResponse<string>.Fail("Habilidade não encontrada."));
 
-            habilidade.Nome = atualizada.Nome;
+            habilidade.Nome = input.Nome ?? habilidade.Nome;
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            var output = new HabilidadeOutput
+            {
+                IdHabilidade = habilidade.IdHabilidade,
+                Nome = habilidade.Nome
+            };
+
+            return Ok(ApiResponse<HabilidadeOutput>.Ok(output, "Habilidade atualizada com sucesso."));
         }
 
-       
-        // DELETE: api/v1/habilidade/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        // DELETE - Remover habilidade
+        [HttpDelete("{id}", Name = "DeleteHabilidade")]
+        [SwaggerOperation(Summary = "Remove uma habilidade", Description = "Exclui uma habilidade cadastrada no sistema.")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Habilidade removida com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Habilidade não encontrada")]
+        public async Task<IActionResult> DeleteHabilidade(int id)
         {
             var habilidade = await _context.Habilidades.FindAsync(id);
             if (habilidade == null)
-                return NotFound(new { mensagem = "Habilidade não encontrada." });
+                return NotFound(ApiResponse<string>.Fail("Habilidade não encontrada."));
 
             _context.Habilidades.Remove(habilidade);
             await _context.SaveChangesAsync();
@@ -145,12 +179,11 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        
         // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Habilidade", new { id }) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetHabilidade), "Habilidade", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Habilidade", new { page, pageSize }) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetHabilidades), "Habilidade", new { page, pageSize }) ?? string.Empty;
     }
 }

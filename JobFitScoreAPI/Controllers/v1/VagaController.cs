@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
@@ -20,6 +21,9 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // GET: api/v1/vagas
         [HttpGet]
+        [SwaggerOperation(Summary = "Lista todas as vagas")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Lista de vagas retornada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Erro interno no servidor")]
         public async Task<IActionResult> GetVagas()
         {
             var vagas = await _context.Vagas
@@ -36,6 +40,9 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // GET: api/v1/vagas/{id}
         [HttpGet("{id}")]
+        [SwaggerOperation(Summary = "Obtém uma vaga específica")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Vaga encontrada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Vaga não encontrada")]
         public async Task<IActionResult> GetVaga(int id)
         {
             var vaga = await _context.Vagas
@@ -61,6 +68,9 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // POST: api/v1/vagas
         [HttpPost]
+        [SwaggerOperation(Summary = "Cria uma nova vaga")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Vaga criada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Dados inválidos")]
         public async Task<IActionResult> CreateVaga([FromBody] Vaga vaga)
         {
             if (!ModelState.IsValid)
@@ -69,7 +79,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _context.Vagas.Add(vaga);
             await _context.SaveChangesAsync();
 
-            return Ok(new
+            return CreatedAtAction(nameof(GetVaga), new { id = vaga.IdVaga }, new
             {
                 success = true,
                 message = "Vaga criada com sucesso.",
@@ -79,6 +89,9 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // PUT: api/v1/vagas/{id}
         [HttpPut("{id}")]
+        [SwaggerOperation(Summary = "Atualiza uma vaga existente")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Vaga atualizada com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Vaga não encontrada")]
         public async Task<IActionResult> UpdateVaga(int id, [FromBody] Vaga vaga)
         {
             var vagaExistente = await _context.Vagas.FindAsync(id);
@@ -107,6 +120,9 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // DELETE: api/v1/vagas/{id}
         [HttpDelete("{id}")]
+        [SwaggerOperation(Summary = "Remove uma vaga")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Vaga removida com sucesso")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Vaga não encontrada")]
         public async Task<IActionResult> DeleteVaga(int id)
         {
             var vaga = await _context.Vagas.FindAsync(id);
@@ -123,11 +139,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _context.Vagas.Remove(vaga);
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                success = true,
-                message = "Vaga removida com sucesso."
-            });
+            return NoContent();
         }
     }
 }

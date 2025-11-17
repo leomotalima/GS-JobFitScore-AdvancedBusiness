@@ -11,7 +11,7 @@ namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/usuario")]
+    [Route("api/v{version:apiVersion}/usuarios")]
     [Tags("Usuários")]
     [Produces("application/json")]
     [Consumes("application/json")]
@@ -19,7 +19,13 @@ namespace JobFitScoreAPI.Controllers.v1
     public class UsuarioController : ControllerBase
     {
         private readonly AppDbContext _context;
-        public UsuarioController(AppDbContext context) => _context = context;
+        private readonly LinkGenerator _linkGenerator;
+
+        public UsuarioController(AppDbContext context, LinkGenerator linkGenerator)
+        {
+            _context = context;
+            _linkGenerator = linkGenerator;
+        }
 
         // Classe de resposta padronizada
         public class ApiResponse<T>
@@ -66,7 +72,19 @@ namespace JobFitScoreAPI.Controllers.v1
                 totalPages = Math.Ceiling((double)totalItems / pageSize)
             };
 
-            return Ok(ApiResponse<object>.Ok(new { meta, data = usuarios }, "Usuários listados com sucesso."));
+            var result = new
+            {
+                meta,
+                data = usuarios,
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
+                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
+                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
+                }
+            };
+
+            return Ok(ApiResponse<object>.Ok(result, "Usuários listados com sucesso."));
         }
 
         // GET - Buscar usuário por ID
@@ -89,15 +107,27 @@ namespace JobFitScoreAPI.Controllers.v1
             if (usuario == null)
                 return NotFound(ApiResponse<string>.Fail("Usuário não encontrado."));
 
-            return Ok(ApiResponse<UsuarioOutput>.Ok(usuario, "Usuário encontrado com sucesso."));
+            var result = new
+            {
+                usuario,
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
+                    new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
+                    new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
+                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
+                }
+            };
+
+            return Ok(ApiResponse<object>.Ok(result, "Usuário encontrado com sucesso."));
         }
 
-        // POST - Criar usuário (ABERTO)
+        // POST - Criar usuário (Aberto)
         [AllowAnonymous]
         [HttpPost(Name = "CreateUsuario")]
         [SwaggerOperation(Summary = "Cria um novo usuário", Description = "Adiciona um novo usuário no sistema.")]
         [SwaggerResponse(StatusCodes.Status201Created, "Usuário criado com sucesso")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição ou dados inválidos")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição")]
         public async Task<IActionResult> CreateUsuario([FromBody] UsuarioInput input)
         {
             if (input == null)
@@ -126,9 +156,8 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // PUT - Atualizar usuário
         [HttpPut("{id}", Name = "UpdateUsuario")]
-        [SwaggerOperation(Summary = "Atualiza um usuário existente", Description = "Modifica informações de um usuário.")]
+        [SwaggerOperation(Summary = "Atualiza um usuário existente")]
         [SwaggerResponse(StatusCodes.Status200OK, "Usuário atualizado com sucesso")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro de validação ou dados inválidos")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
         public async Task<IActionResult> UpdateUsuario(int id, [FromBody] UsuarioUpdateInput input)
         {
@@ -139,11 +168,10 @@ namespace JobFitScoreAPI.Controllers.v1
             if (usuario == null)
                 return NotFound(ApiResponse<string>.Fail("Usuário não encontrado."));
 
-            usuario.Nome = input.Nome;
-            usuario.Email = input.Email;
+            usuario.Nome = input.Nome ?? usuario.Nome;
+            usuario.Email = input.Email ?? usuario.Email;
             usuario.Senha = input.Senha ?? usuario.Senha;
 
-            _context.Entry(usuario).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             var output = new UsuarioOutput
@@ -158,7 +186,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // DELETE - Remover usuário
         [HttpDelete("{id}", Name = "DeleteUsuario")]
-        [SwaggerOperation(Summary = "Remove um usuário", Description = "Exclui um usuário cadastrado do sistema.")]
+        [SwaggerOperation(Summary = "Remove um usuário")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Usuário removido com sucesso")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
         public async Task<IActionResult> DeleteUsuario(int id)
@@ -172,5 +200,12 @@ namespace JobFitScoreAPI.Controllers.v1
 
             return NoContent();
         }
+
+        // HATEOAS Helpers
+        private string GetByIdUrl(int id) =>
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetUsuario), "Usuario", new { id }) ?? string.Empty;
+
+        private string GetPageUrl(int page, int pageSize) =>
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetUsuarios), "Usuario", new { page, pageSize }) ?? string.Empty;
     }
 }

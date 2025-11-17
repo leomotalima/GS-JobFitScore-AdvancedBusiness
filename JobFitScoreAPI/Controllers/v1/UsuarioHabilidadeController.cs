@@ -6,8 +6,6 @@ using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
 using JobFitScoreAPI.Dtos.UsuarioHabilidade;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
@@ -21,10 +19,12 @@ namespace JobFitScoreAPI.Controllers.v1
     public class UsuarioHabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly LinkGenerator _linkGenerator;
 
-        public UsuarioHabilidadeController(AppDbContext context)
+        public UsuarioHabilidadeController(AppDbContext context, LinkGenerator linkGenerator)
         {
             _context = context;
+            _linkGenerator = linkGenerator;
         }
 
         // Classe de resposta padronizada
@@ -41,42 +41,53 @@ namespace JobFitScoreAPI.Controllers.v1
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // GET - Listar habilidades de um usuário
+        // GET - Habilidades de um usuário
         [HttpGet("{usuarioId}", Name = "GetHabilidadesDoUsuario")]
-        [SwaggerOperation(Summary = "Lista todas as habilidades de um usuário")]
-        [SwaggerResponse(StatusCodes.Status200OK, "Habilidades retornadas com sucesso")]
-        [SwaggerResponse(StatusCodes.Status404NotFound, "Nenhuma habilidade encontrada para o usuário")]
+        [SwaggerOperation(Summary = "Lista habilidades de um usuário")]
+        [SwaggerResponse(StatusCodes.Status200OK)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetHabilidadesDoUsuario(int usuarioId)
         {
+            var usuario = await _context.Usuarios.FindAsync(usuarioId);
+            if (usuario == null)
+                return NotFound(ApiResponse<string>.Fail("Usuário não encontrado."));
+
             var usuarioHabilidades = await _context.UsuarioHabilidades
                 .Include(uh => uh.Habilidade)
-                .Include(uh => uh.Usuario)
-                .Where(uh => uh.Usuario != null && uh.Habilidade != null && uh.Usuario.IdUsuario == usuarioId)
+                .Where(uh => uh.Usuario!.IdUsuario == usuarioId)
                 .ToListAsync();
 
-            if (!usuarioHabilidades.Any())
-                return NotFound(ApiResponse<string>.Fail("Nenhuma habilidade encontrada para o usuário."));
-
-            var resultado = usuarioHabilidades.Select(uh => new
+            var habilidades = usuarioHabilidades.Select(uh => new
             {
-                UsuarioId = uh.Usuario!.IdUsuario,
-                HabilidadeId = uh.Habilidade!.IdHabilidade,
-                HabilidadeNome = uh.Habilidade.Nome
+                uh.Habilidade!.IdHabilidade,
+                uh.Habilidade.Nome
             });
 
-            return Ok(ApiResponse<object>.Ok(resultado, "Habilidades listadas com sucesso."));
+            var result = new
+            {
+                usuarioId,
+                habilidades,
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetUserSkillsUrl(usuarioId), method = "GET" },
+                    new { rel = "add", href = GetAddSkillUrl(), method = "POST" },
+                    new { rel = "remove", href = GetRemoveSkillUrl(), method = "DELETE" }
+                }
+            };
+
+            return Ok(ApiResponse<object>.Ok(result, "Habilidades listadas com sucesso."));
         }
 
-        // POST - Adicionar habilidade a um usuário
+        // POST - Adicionar habilidade ao usuário
         [HttpPost(Name = "AdicionarHabilidadeUsuario")]
-        [SwaggerOperation(Summary = "Adiciona uma habilidade a um usuário")]
-        [SwaggerResponse(StatusCodes.Status201Created, "Habilidade adicionada com sucesso")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Input inválido")]
-        [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário ou habilidade não encontrado")]
+        [SwaggerOperation(Summary = "Adiciona habilidade ao usuário")]
+        [SwaggerResponse(StatusCodes.Status201Created)]
+        [SwaggerResponse(StatusCodes.Status400BadRequest)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AdicionarHabilidade([FromBody] UsuarioHabilidadeInput dto)
         {
             if (dto == null)
-                return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
+                return BadRequest(ApiResponse<string>.Fail("Input inválido."));
 
             var usuario = await _context.Usuarios.FindAsync(dto.IdUsuario);
             var habilidade = await _context.Habilidades.FindAsync(dto.IdHabilidade);
@@ -84,42 +95,52 @@ namespace JobFitScoreAPI.Controllers.v1
             if (usuario == null || habilidade == null)
                 return NotFound(ApiResponse<string>.Fail("Usuário ou habilidade não encontrado."));
 
-            var usuarioHabilidadeExistente = await _context.UsuarioHabilidades
-                .FirstOrDefaultAsync(uh => uh.Usuario != null && uh.Habilidade != null &&
-                                           uh.Usuario.IdUsuario == dto.IdUsuario &&
-                                           uh.Habilidade.IdHabilidade == dto.IdHabilidade);
+            var existente = await _context.UsuarioHabilidades
+                .FirstOrDefaultAsync(uh => uh.Usuario!.IdUsuario == dto.IdUsuario &&
+                                           uh.Habilidade!.IdHabilidade == dto.IdHabilidade);
 
-            if (usuarioHabilidadeExistente != null)
+            if (existente != null)
                 return BadRequest(ApiResponse<string>.Fail("Habilidade já cadastrada para este usuário."));
 
-            var usuarioHabilidade = new UsuarioHabilidade
+            var registro = new UsuarioHabilidade
             {
                 Usuario = usuario,
                 Habilidade = habilidade
             };
 
-            _context.UsuarioHabilidades.Add(usuarioHabilidade);
+            _context.UsuarioHabilidades.Add(registro);
             await _context.SaveChangesAsync();
+
+            var result = new
+            {
+                usuario.IdUsuario,
+                habilidade.IdHabilidade,
+                habilidade.Nome,
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetUserSkillsUrl(usuario.IdUsuario), method = "GET" },
+                    new { rel = "remove", href = GetRemoveSkillUrl(), method = "DELETE" }
+                }
+            };
 
             return CreatedAtAction(nameof(GetHabilidadesDoUsuario),
                 new { usuarioId = usuario.IdUsuario },
-                ApiResponse<UsuarioHabilidade>.Ok(usuarioHabilidade, "Habilidade adicionada com sucesso."));
+                ApiResponse<object>.Ok(result, "Habilidade adicionada com sucesso."));
         }
 
-        // DELETE - Remover habilidade de um usuário
+        // DELETE - Remover habilidade
         [HttpDelete(Name = "RemoverHabilidadeUsuario")]
-        [SwaggerOperation(Summary = "Remove uma habilidade de um usuário")]
-        [SwaggerResponse(StatusCodes.Status204NoContent, "Habilidade removida com sucesso")]
-        [SwaggerResponse(StatusCodes.Status404NotFound, "Habilidade não encontrada para o usuário")]
+        [SwaggerOperation(Summary = "Remove habilidade do usuário")]
+        [SwaggerResponse(StatusCodes.Status204NoContent)]
+        [SwaggerResponse(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoverHabilidade([FromBody] UsuarioHabilidadeInput dto)
         {
             var usuarioHabilidade = await _context.UsuarioHabilidades
                 .Include(uh => uh.Usuario)
                 .Include(uh => uh.Habilidade)
-                .Where(uh => uh.Usuario != null && uh.Habilidade != null &&
-                             uh.Usuario.IdUsuario == dto.IdUsuario &&
-                             uh.Habilidade.IdHabilidade == dto.IdHabilidade)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(uh =>
+                    uh.Usuario!.IdUsuario == dto.IdUsuario &&
+                    uh.Habilidade!.IdHabilidade == dto.IdHabilidade);
 
             if (usuarioHabilidade == null)
                 return NotFound(ApiResponse<string>.Fail("Habilidade não encontrada para o usuário."));
@@ -129,5 +150,16 @@ namespace JobFitScoreAPI.Controllers.v1
 
             return NoContent();
         }
+
+        // HATEOAS Helper URLs
+        private string GetUserSkillsUrl(int usuarioId) =>
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetHabilidadesDoUsuario), "UsuarioHabilidade",
+                new { usuarioId }) ?? string.Empty;
+
+        private string GetAddSkillUrl() =>
+            _linkGenerator.GetUriByAction(HttpContext, nameof(AdicionarHabilidade), "UsuarioHabilidade") ?? string.Empty;
+
+        private string GetRemoveSkillUrl() =>
+            _linkGenerator.GetUriByAction(HttpContext, nameof(RemoverHabilidade), "UsuarioHabilidade") ?? string.Empty;
     }
 }
