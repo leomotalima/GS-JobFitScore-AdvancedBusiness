@@ -1,9 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+
 namespace JobFitScoreAPI.Models
 {
-    [Table("Usuarios")]
+    [Table("usuarios")]
     public class Usuario
     {
         [Key]
@@ -12,25 +15,24 @@ namespace JobFitScoreAPI.Models
 
         [Required]
         [Column("nome")]
+        [MaxLength(100)]
         public string Nome { get; set; } = string.Empty;
 
         [Required]
         [Column("email")]
+        [MaxLength(100)]
         public string Email { get; set; } = string.Empty;
 
         [Required]
         [Column("senha")]
+        [MaxLength(200)]
         public string Senha { get; set; } = string.Empty;
 
         [Column("refresh_token")]
+        [MaxLength(200)]
         public string? RefreshToken { get; set; }
 
         [Column("expira_refresh_token")]
         public DateTime? ExpiraRefreshToken { get; set; }
-
-        [Column("habilidades")]
-        public string? Habilidades { get; set; }
-
-        public ICollection<Candidatura>? Candidaturas { get; set; }
     }
 }

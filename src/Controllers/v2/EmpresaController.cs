@@ -1,13 +1,14 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
+using JobFitScoreAPI.Models;
 
 namespace JobFitScoreAPI.Controllers.v2
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/empresa")]
-    [ApiVersion("2.0")]
+    [Asp.Versioning.ApiVersion("2.0")]
     public class EmpresaController : ControllerBase
     {
         private readonly AppDbContext _context;

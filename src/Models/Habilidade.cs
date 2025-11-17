@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobFitScoreAPI.Models
 {
-    [Table("Habilidades")]
+    [Table("habilidades")]
     public class Habilidade
     {
         [Key]
@@ -12,12 +12,7 @@ namespace JobFitScoreAPI.Models
 
         [Required]
         [Column("nome")]
+        [MaxLength(100)]
         public string Nome { get; set; } = string.Empty;
-
-        [Column("descricao")]
-        public string? Descricao { get; set; }
-
-        public ICollection<UsuarioHabilidade>? Usuarios { get; set; }
-        public ICollection<VagaHabilidade>? Vagas { get; set; }
     }
 }

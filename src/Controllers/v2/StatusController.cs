@@ -1,11 +1,15 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
+using JobFitScoreAPI.Models;
 
-namespace JobFitScoreApi.Controllers.v2
+
+namespace JobFitScoreAPI.Controllers.v2
 {
     [ApiController]
-    [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}/status")]
+    [Asp.Versioning.ApiVersion("2.0")]
     public class StatusController : ControllerBase
     {
         [HttpGet("info")]

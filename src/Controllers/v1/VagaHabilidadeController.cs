@@ -1,15 +1,15 @@
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
 using JobFitScoreAPI.Models;
+
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [Asp.Versioning.ApiVersion("1.0")]
     public class VagaHabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -21,9 +21,8 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // ============================================================
+
         // GET: api/v1/vagahabilidade?page=1&pageSize=10
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
@@ -32,20 +31,17 @@ namespace JobFitScoreAPI.Controllers.v1
 
             var total = await _context.VagaHabilidades.CountAsync();
 
-            var dados = await _context.VagaHabilidades
-                .Include(v => v.Vaga)
-                .Include(h => h.Habilidade)
+            var lista = await _context.VagaHabilidades
+                .Include(vh => vh.Vaga)
+                .Include(vh => vh.Habilidade)
                 .OrderBy(vh => vh.IdVagaHabilidade)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .AsNoTracking()
                 .Select(vh => new
                 {
                     vh.IdVagaHabilidade,
-                    Vaga = vh.Vaga != null ? vh.Vaga.Titulo : "Vaga não encontrada",
-                    Habilidade = vh.Habilidade != null ? vh.Habilidade.Nome : "Habilidade não encontrada",
-                    vh.VagaId,
-                    vh.HabilidadeId
+                    Vaga = vh.Vaga != null ? vh.Vaga.Titulo : "Vaga não definida",
+                    Habilidade = vh.Habilidade != null ? vh.Habilidade.Nome : "Habilidade não definida"
                 })
                 .ToListAsync();
 
@@ -55,7 +51,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 currentPage = page,
                 pageSize,
                 totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = dados,
+                data = lista,
                 links = new List<object>
                 {
                     new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
@@ -67,106 +63,103 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
+      
         // GET: api/v1/vagahabilidade/{id}
-        // ============================================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var registro = await _context.VagaHabilidades
+            var vh = await _context.VagaHabilidades
                 .Include(v => v.Vaga)
                 .Include(h => h.Habilidade)
                 .FirstOrDefaultAsync(x => x.IdVagaHabilidade == id);
 
-            if (registro == null)
-                return NotFound(new { mensagem = "Registro não encontrado." });
+            if (vh == null)
+                return NotFound(new { mensagem = "Relacionamento não encontrado." });
 
             var result = new
             {
-                registro.IdVagaHabilidade,
-                Vaga = registro.Vaga?.Titulo ?? "Vaga não encontrada",
-                Habilidade = registro.Habilidade?.Nome ?? "Habilidade não encontrada",
-                registro.VagaId,
-                registro.HabilidadeId,
-                links = GenerateLinks(id)
+                vh.IdVagaHabilidade,
+                Vaga = vh.Vaga?.Titulo ?? "Vaga não definida",
+                Habilidade = vh.Habilidade?.Nome ?? "Habilidade não definida",
+                links = new List<object>
+                {
+                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
+                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
+                }
             };
 
             return Ok(result);
         }
 
-        // ============================================================
+      
         // POST: api/v1/vagahabilidade
-        // ============================================================
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] VagaHabilidade input)
+        public async Task<IActionResult> Create([FromBody] VagaHabilidade nova)
         {
-            if (input == null)
+            if (nova == null || nova.VagaId == 0 || nova.HabilidadeId == 0)
                 return BadRequest(new { mensagem = "Dados inválidos." });
 
-            
-            var vaga = await _context.Vagas.FindAsync(input.VagaId);
-            if (vaga == null)
-                return NotFound(new { mensagem = "Vaga não encontrada." });
-
-            
-            var habilidade = await _context.Habilidades.FindAsync(input.HabilidadeId);
-            if (habilidade == null)
-                return NotFound(new { mensagem = "Habilidade não encontrada." });
-
-            
-            bool existe = await _context.VagaHabilidades
-                .AnyAsync(x => x.VagaId == input.VagaId && x.HabilidadeId == input.HabilidadeId);
-
-            if (existe)
-                return Conflict(new { mensagem = "Essa habilidade já está vinculada a essa vaga." });
-
-            _context.VagaHabilidades.Add(input);
+            _context.VagaHabilidades.Add(nova);
             await _context.SaveChangesAsync();
 
-            var url = GetByIdUrl(input.IdVagaHabilidade);
+            var url = GetByIdUrl(nova.IdVagaHabilidade);
 
-            return Created(url, new
+            var result = new
             {
-                input.IdVagaHabilidade,
-                Vaga = vaga.Titulo,
-                Habilidade = habilidade.Nome,
-                links = GenerateLinks(input.IdVagaHabilidade)
-            });
+                nova.IdVagaHabilidade,
+                nova.VagaId,
+                nova.HabilidadeId,
+                links = new List<object>
+                {
+                    new { rel = "self", href = url, method = "GET" },
+                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
+                }
+            };
+
+            return Created(url, result);
         }
 
-        // ============================================================
-        // DELETE: api/v1/vagahabilidade/{id}
-        // ============================================================
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+      
+        // PUT: api/v1/vagahabilidade/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] VagaHabilidade atualizada)
         {
-            var registro = await _context.VagaHabilidades.FindAsync(id);
-            if (registro == null)
-                return NotFound(new { mensagem = "Registro não encontrado." });
+            if (atualizada == null || atualizada.VagaId == 0 || atualizada.HabilidadeId == 0)
+                return BadRequest(new { mensagem = "Dados inválidos." });
 
-            _context.VagaHabilidades.Remove(registro);
+            var vh = await _context.VagaHabilidades.FindAsync(id);
+            if (vh == null)
+                return NotFound(new { mensagem = "Relacionamento não encontrado." });
+
+            vh.VagaId = atualizada.VagaId;
+            vh.HabilidadeId = atualizada.HabilidadeId;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // ============================================================
-        // MÉTODOS AUXILIARES (HATEOAS)
-        // ============================================================
-        private IEnumerable<object> GenerateLinks(int id) =>
-            new List<object>
-            {
-                new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
-                new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
-            };
+        
+        // DELETE: api/v1/vagahabilidade/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var vh = await _context.VagaHabilidades.FindAsync(id);
+            if (vh == null)
+                return NotFound(new { mensagem = "Relacionamento não encontrado." });
 
+            _context.VagaHabilidades.Remove(vh);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        
+        // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "VagaHabilidade", new { id })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "VagaHabilidade", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "VagaHabilidade", new { page, pageSize })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "VagaHabilidade", new { page, pageSize }) ?? string.Empty;
     }
 }

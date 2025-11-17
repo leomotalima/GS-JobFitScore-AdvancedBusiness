@@ -1,7 +1,8 @@
-using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
+using JobFitScoreAPI.Models;
 
 namespace JobFitScoreAPI.Controllers.v2
 {
@@ -17,16 +18,14 @@ namespace JobFitScoreAPI.Controllers.v2
             _context = context;
         }
 
+       
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string? nome, string? habilidade)
+        public async Task<IActionResult> Search(string? nome)
         {
             var query = _context.Usuarios.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(nome))
                 query = query.Where(u => u.Nome.Contains(nome));
-
-            if (!string.IsNullOrWhiteSpace(habilidade))
-                query = query.Where(u => u.Habilidades != null && u.Habilidades.Contains(habilidade));
 
             var result = await query
                 .Select(u => new
@@ -34,7 +33,10 @@ namespace JobFitScoreAPI.Controllers.v2
                     u.IdUsuario,
                     u.Nome,
                     u.Email,
-                    u.Habilidades
+                    Habilidades = _context.UsuarioHabilidades
+                        .Where(uh => uh.UsuarioId == u.IdUsuario && uh.Habilidade != null)
+                        .Select(uh => uh.Habilidade!.Nome)
+                        .ToList()
                 })
                 .ToListAsync();
 

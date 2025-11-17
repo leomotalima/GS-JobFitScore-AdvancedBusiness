@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobFitScoreAPI.Models
 {
-    [Table("Vagas")]
+    [Table("vagas")]
     public class Vaga
     {
         [Key]
@@ -12,28 +12,15 @@ namespace JobFitScoreAPI.Models
 
         [Required]
         [Column("titulo")]
+        [MaxLength(100)]
         public string Titulo { get; set; } = string.Empty;
 
-        [Column("descricao")]
-        public string Descricao { get; set; } = string.Empty; 
+        [Required]
+        [Column("empresa_id")]
+        public int EmpresaId { get; set; }
 
-        [Column("nivel_experiencia")]
-        public string NivelExperiencia { get; set; } = string.Empty;
-
-        [Column("salario")]
-        public decimal? Salario { get; set; }
-
-        [Column("localizacao")]
-        public string Localizacao { get; set; } = string.Empty; 
-
-        [Column("habilidades")]
-        public string? Habilidades { get; set; }
-
-        [ForeignKey("Empresa")]
-        [Column("id_empresa")]
-        public int? IdEmpresa { get; set; }
-
+        // Navegação para empresa
+        [ForeignKey("EmpresaId")]
         public Empresa? Empresa { get; set; }
-        public ICollection<Candidatura>? Candidaturas { get; set; }
     }
 }

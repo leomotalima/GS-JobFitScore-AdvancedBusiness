@@ -1,192 +1,133 @@
 using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
-using JobFitScoreAPI.Dtos.Vaga;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion(1.0)]
+    [Route("api/v{version:apiVersion}/vagas")]
     public class VagaController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly LinkGenerator _linkGenerator;
 
-        public VagaController(AppDbContext context, LinkGenerator linkGenerator)
+        public VagaController(AppDbContext context)
         {
             _context = context;
-            _linkGenerator = linkGenerator;
         }
 
-        // ============================================================
-        // GET: api/v1/vaga?page=1&pageSize=5
-        // ============================================================
+        // GET: api/v1/vagas
         [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
+        public async Task<IActionResult> GetVagas()
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
-
-            var total = await _context.Vagas.CountAsync();
-
             var vagas = await _context.Vagas
-                .OrderBy(v => v.IdVaga)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
-                .Select(v => new VagaOutput
-                {
-                    IdVaga = v.IdVaga,
-                    Titulo = v.Titulo,
-                    Descricao = v.Descricao,
-                    NivelExperiencia = v.NivelExperiencia,
-                    Salario = v.Salario,
-                    Localizacao = v.Localizacao
-                })
+                .Include(v => v.Empresa)
                 .ToListAsync();
-
-            var result = new
-            {
-                totalItems = total,
-                currentPage = page,
-                pageSize,
-                totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = vagas,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
-                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
-                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
-                }
-            };
-
-            return Ok(result);
-        }
-
-        // ============================================================
-        // GET: api/v1/vaga/{id}
-        // ============================================================
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var vaga = await _context.Vagas.FindAsync(id);
-            if (vaga == null)
-                return NotFound(new { mensagem = "Vaga não encontrada." });
-
-            var result = new VagaOutput
-            {
-                IdVaga = vaga.IdVaga,
-                Titulo = vaga.Titulo,
-                Descricao = vaga.Descricao,
-                NivelExperiencia = vaga.NivelExperiencia,
-                Salario = vaga.Salario,
-                Localizacao = vaga.Localizacao
-            };
 
             return Ok(new
             {
-                result,
-                links = GenerateLinks(id)
+                success = true,
+                message = "Vagas listadas com sucesso.",
+                data = vagas
             });
         }
 
-        // ============================================================
-        // POST: api/v1/vaga
-        // ============================================================
+        // GET: api/v1/vagas/{id}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetVaga(int id)
+        {
+            var vaga = await _context.Vagas
+                .Include(v => v.Empresa)
+                .FirstOrDefaultAsync(v => v.IdVaga == id);
+
+            if (vaga == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Vaga não encontrada."
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                message = "Vaga encontrada com sucesso.",
+                data = vaga
+            });
+        }
+
+        // POST: api/v1/vagas
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] VagaInput input)
+        public async Task<IActionResult> CreateVaga([FromBody] Vaga vaga)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var vaga = new Vaga
-            {
-                Titulo = input.Titulo ?? string.Empty,
-                Descricao = input.Descricao ?? string.Empty,
-                NivelExperiencia = input.NivelExperiencia ?? string.Empty,
-                Salario = input.Salario ?? 0,
-                Localizacao = input.Localizacao ?? string.Empty
-            };
-
             _context.Vagas.Add(vaga);
             await _context.SaveChangesAsync();
 
-            var url = GetByIdUrl(vaga.IdVaga);
-
-            return Created(url, new
+            return Ok(new
             {
-                result = new VagaOutput
-                {
-                    IdVaga = vaga.IdVaga,
-                    Titulo = vaga.Titulo,
-                    Descricao = vaga.Descricao,
-                    NivelExperiencia = vaga.NivelExperiencia,
-                    Salario = vaga.Salario,
-                    Localizacao = vaga.Localizacao
-                },
-                links = GenerateLinks(vaga.IdVaga)
+                success = true,
+                message = "Vaga criada com sucesso.",
+                data = vaga
             });
         }
 
-        // ============================================================
-        // PUT: api/v1/vaga/{id}
-        // ============================================================
+        // PUT: api/v1/vagas/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] VagaUpdateInput input)
+        public async Task<IActionResult> UpdateVaga(int id, [FromBody] Vaga vaga)
         {
-            var vaga = await _context.Vagas.FindAsync(id);
-            if (vaga == null)
-                return NotFound(new { mensagem = "Vaga não encontrada." });
+            var vagaExistente = await _context.Vagas.FindAsync(id);
 
-            vaga.Titulo = !string.IsNullOrWhiteSpace(input.Titulo) ? input.Titulo! : vaga.Titulo;
-            vaga.Descricao = !string.IsNullOrWhiteSpace(input.Descricao) ? input.Descricao! : vaga.Descricao;
-            vaga.NivelExperiencia = !string.IsNullOrWhiteSpace(input.NivelExperiencia) ? input.NivelExperiencia! : vaga.NivelExperiencia;
-            vaga.Localizacao = !string.IsNullOrWhiteSpace(input.Localizacao) ? input.Localizacao! : vaga.Localizacao;
+            if (vagaExistente == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Vaga não encontrada."
+                });
+            }
 
-            if (input.Salario.HasValue && input.Salario > 0)
-                vaga.Salario = input.Salario.Value;
+            vagaExistente.Titulo = vaga.Titulo;
+            vagaExistente.EmpresaId = vaga.EmpresaId;
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new
+            {
+                success = true,
+                message = "Vaga atualizada com sucesso.",
+                data = vagaExistente
+            });
         }
 
-        // ============================================================
-        // DELETE: api/v1/vaga/{id}
-        // ============================================================
+        // DELETE: api/v1/vagas/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteVaga(int id)
         {
             var vaga = await _context.Vagas.FindAsync(id);
+
             if (vaga == null)
-                return NotFound(new { mensagem = "Vaga não encontrada." });
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Vaga não encontrada."
+                });
+            }
 
             _context.Vagas.Remove(vaga);
             await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
-
-        // ============================================================
-        // HATEOAS HELPERS
-        // ============================================================
-        private IEnumerable<object> GenerateLinks(int id) =>
-            new List<object>
+            return Ok(new
             {
-                new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
-                new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
-                new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-            };
-
-        private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Vaga", new { id }) ?? string.Empty;
-
-        private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Vaga", new { page, pageSize }) ?? string.Empty;
+                success = true,
+                message = "Vaga removida com sucesso."
+            });
+        }
     }
 }

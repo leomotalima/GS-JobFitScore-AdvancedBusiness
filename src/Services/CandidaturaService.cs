@@ -1,9 +1,7 @@
 using JobFitScoreAPI.Data;
-using JobFitScoreAPI.Services;
 using JobFitScoreAPI.Models;
 using System;
 using System.Linq;
-using System.Collections.Generic;
 
 namespace JobFitScoreAPI.Services
 {
@@ -18,12 +16,11 @@ namespace JobFitScoreAPI.Services
             _mlService = mlService;
         }
 
-        public double ProcessarCandidatura(int idUsuario, int idVaga)
+        public double ProcessarCandidatura(int usuarioId, int vagaId)
         {
-            var usuario = _context.Usuarios.Find(idUsuario);
-            var vaga = _context.Vagas.Find(idVaga);
+            var usuario = _context.Usuarios.Find(usuarioId);
+            var vaga = _context.Vagas.Find(vagaId);
 
-           
             if (usuario == null || vaga == null)
                 throw new Exception("Usuário ou vaga não encontrada.");
 
@@ -31,22 +28,20 @@ namespace JobFitScoreAPI.Services
             var dadosEntrada = new JobFitData
             {
                 ExperienciaAnos = 3, // exemplo (poderia vir do usuário)
-                HabilidadesMatch = CalcularHabilidadesMatch(usuario.Habilidades, vaga.Habilidades),
+                HabilidadesMatch = CalcularHabilidadesMatch(usuario, vaga),
                 CursosRelacionados = 1, // exemplo
                 NivelVaga = 2, // exemplo
                 ScoreCompatibilidade = 0 // campo usado apenas no treinamento
             };
 
-            
             float score = _mlService.PreverCompatibilidade(dadosEntrada);
 
-           
+            // Cria a candidatura
             var candidatura = new Candidatura
             {
-                IdUsuario = idUsuario,
-                IdVaga = idVaga,
-                Score = (int?)score,
-                DataCandidatura = DateTime.Now
+                UsuarioId = usuarioId,
+                VagaId = vagaId
+                // Score e DataCandidatura não existem no model, então não adicionamos
             };
 
             _context.Candidaturas.Add(candidatura);
@@ -55,15 +50,11 @@ namespace JobFitScoreAPI.Services
             return score;
         }
 
-        private int CalcularHabilidadesMatch(string? habilidadesUsuario, string? habilidadesVaga)
+        private int CalcularHabilidadesMatch(Usuario usuario, Vaga vaga)
         {
-            if (string.IsNullOrEmpty(habilidadesUsuario) || string.IsNullOrEmpty(habilidadesVaga))
-                return 0;
-
-            var userSkills = habilidadesUsuario.Split(',').Select(h => h.Trim()).ToList();
-            var jobSkills = habilidadesVaga.Split(',').Select(h => h.Trim()).ToList();
-
-            return userSkills.Intersect(jobSkills).Count();
+            // Aqui você precisa acessar as habilidades do usuário e da vaga
+            // Se você ainda não tem uma tabela de relacionamento, o método precisa ser ajustado
+            return 0; // placeholder para evitar erro
         }
     }
 }

@@ -1,13 +1,14 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
+using JobFitScoreAPI.Models;
 
 namespace JobFitScoreAPI.Controllers.v2
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/habilidade")]
-    [ApiVersion("2.0")]
+    [Asp.Versioning.ApiVersion("2.0")]
     public class HabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -17,20 +18,18 @@ namespace JobFitScoreAPI.Controllers.v2
             _context = context;
         }
 
-        [HttpGet("search")]
-        public async Task<IActionResult> Search(string? nome)
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
-            var result = await _context.Habilidades
-                .Where(h => string.IsNullOrEmpty(nome) || h.Nome.Contains(nome))
+            var habilidades = await _context.Habilidades
                 .Select(h => new
                 {
                     h.IdHabilidade,
-                    h.Nome,
-                    h.Descricao
+                    h.Nome
                 })
                 .ToListAsync();
 
-            return Ok(result);
+            return Ok(habilidades);
         }
     }
 }

@@ -1,15 +1,15 @@
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
 using JobFitScoreAPI.Models;
+
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [Asp.Versioning.ApiVersion("1.0")]
     public class CursoController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -21,11 +21,10 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // ============================================================
-        // GET: api/v1/curso?page=1&pageSize=10
-        // ============================================================
+       
+        // GET: api/v1/curso?page=1&pageSize=5
         [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
         {
             if (page <= 0 || pageSize <= 0)
                 return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
@@ -33,6 +32,7 @@ namespace JobFitScoreAPI.Controllers.v1
             var total = await _context.Cursos.CountAsync();
 
             var cursos = await _context.Cursos
+                .Include(c => c.Usuario)
                 .OrderBy(c => c.Nome)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -40,8 +40,9 @@ namespace JobFitScoreAPI.Controllers.v1
                 {
                     c.IdCurso,
                     c.Nome,
-                    c.Descricao,
-                    c.CargaHoraria
+                    c.Instituicao,
+                    c.CargaHoraria,
+                    Usuario = c.Usuario != null ? c.Usuario.Nome : "Usuário não definido"
                 })
                 .ToListAsync();
 
@@ -63,13 +64,15 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
+      
         // GET: api/v1/curso/{id}
-        // ============================================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var curso = await _context.Cursos.FindAsync(id);
+            var curso = await _context.Cursos
+                .Include(c => c.Usuario)
+                .FirstOrDefaultAsync(c => c.IdCurso == id);
+
             if (curso == null)
                 return NotFound(new { mensagem = "Curso não encontrado." });
 
@@ -77,21 +80,21 @@ namespace JobFitScoreAPI.Controllers.v1
             {
                 curso.IdCurso,
                 curso.Nome,
-                curso.Descricao,
+                curso.Instituicao,
                 curso.CargaHoraria,
+                Usuario = curso.Usuario != null ? curso.Usuario.Nome : "Usuário não definido",
                 links = new List<object>
                 {
                     new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
+                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
                 }
             };
 
             return Ok(result);
         }
 
-        // ============================================================
+        
         // POST: api/v1/curso
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] Curso curso)
         {
@@ -107,43 +110,41 @@ namespace JobFitScoreAPI.Controllers.v1
             {
                 curso.IdCurso,
                 curso.Nome,
-                curso.Descricao,
+                curso.Instituicao,
                 curso.CargaHoraria,
                 links = new List<object>
                 {
                     new { rel = "self", href = url, method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
+                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
                 }
             };
 
             return Created(url, result);
         }
 
-        // ============================================================
+
         // PUT: api/v1/curso/{id}
-        // ============================================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Curso atualizado)
+        public async Task<IActionResult> Update(int id, [FromBody] Curso updated)
         {
-            if (atualizado == null)
+            if (updated == null)
                 return BadRequest(new { mensagem = "Dados inválidos." });
 
             var curso = await _context.Cursos.FindAsync(id);
             if (curso == null)
                 return NotFound(new { mensagem = "Curso não encontrado." });
 
-            curso.Nome = atualizado.Nome ?? curso.Nome;
-            curso.Descricao = atualizado.Descricao ?? curso.Descricao;
-            curso.CargaHoraria = atualizado.CargaHoraria != 0 ? atualizado.CargaHoraria : curso.CargaHoraria;
+            curso.Nome = updated.Nome ?? curso.Nome;
+            curso.Instituicao = updated.Instituicao ?? curso.Instituicao;
+            curso.CargaHoraria = updated.CargaHoraria ?? curso.CargaHoraria;
+            curso.UsuarioId = updated.UsuarioId != 0 ? updated.UsuarioId : curso.UsuarioId;
 
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
-        // ============================================================
+        
         // DELETE: api/v1/curso/{id}
-        // ============================================================
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -157,23 +158,12 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        // ============================================================
-        // MÉTODOS AUXILIARES (HATEOAS)
-        // ============================================================
+
+        // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetById),
-                controller: "Curso",
-                values: new { id }
-            ) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Curso", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(
-                HttpContext,
-                action: nameof(GetAll),
-                controller: "Curso",
-                values: new { page, pageSize }
-            ) ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Curso", new { page, pageSize }) ?? string.Empty;
     }
 }

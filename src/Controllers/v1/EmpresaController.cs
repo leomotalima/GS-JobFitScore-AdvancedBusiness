@@ -1,11 +1,8 @@
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
-using JobFitScoreAPI.Dtos.Empresa;
-using BCrypt.Net;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
@@ -23,9 +20,8 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // ============================================================
+        
         // GET: api/v1/empresa?page=1&pageSize=5
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
         {
@@ -35,16 +31,20 @@ namespace JobFitScoreAPI.Controllers.v1
             var total = await _context.Empresas.CountAsync();
 
             var empresas = await _context.Empresas
-                .OrderBy(e => e.IdEmpresa)
+                .Include(e => e.Vagas)
+                .OrderBy(e => e.Nome)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .AsNoTracking()
-                .Select(e => new EmpresaOutput
+                .Select(e => new
                 {
-                    IdEmpresa = e.IdEmpresa,
-                    Nome = e.Nome,
-                    Cnpj = e.Cnpj,
-                    Email = e.Email
+                    e.IdEmpresa,
+                    e.Nome,
+                    e.Cnpj,
+                    e.Email,
+                   
+                    Vagas = (e.Vagas ?? Enumerable.Empty<Vaga>())
+                        .Select(v => new { v.IdVaga, v.Titulo })
+                        .ToList()
                 })
                 .ToListAsync();
 
@@ -66,13 +66,15 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
+        
         // GET: api/v1/empresa/{id}
-        // ============================================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var empresa = await _context.Empresas.FindAsync(id);
+            var empresa = await _context.Empresas
+                .Include(e => e.Vagas)
+                .FirstOrDefaultAsync(e => e.IdEmpresa == id);
+
             if (empresa == null)
                 return NotFound(new { mensagem = "Empresa não encontrada." });
 
@@ -82,11 +84,12 @@ namespace JobFitScoreAPI.Controllers.v1
                 empresa.Nome,
                 empresa.Cnpj,
                 empresa.Email,
+                Vagas = (empresa.Vagas ?? Enumerable.Empty<Vaga>())
+                    .Select(v => new { v.IdVaga, v.Titulo })
+                    .ToList(),
                 links = new List<object>
                 {
                     new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
-                    new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
                     new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
                 }
             };
@@ -94,69 +97,60 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
+        
         // POST: api/v1/empresa
-        // ============================================================
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] EmpresaInput input)
+        public async Task<IActionResult> Create([FromBody] Empresa empresa)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (await _context.Empresas.AnyAsync(e => e.Cnpj == input.Cnpj))
-                return Conflict(new { mensagem = "CNPJ já cadastrado." });
-
-            if (await _context.Empresas.AnyAsync(e => e.Email == input.Email))
-                return Conflict(new { mensagem = "E-mail já cadastrado." });
-
-            var empresa = new Empresa
-            {
-                Nome = input.Nome,
-                Cnpj = input.Cnpj,
-                Email = input.Email,
-                Senha = BCrypt.Net.BCrypt.HashPassword(input.Senha!)
-            };
+            if (empresa == null)
+                return BadRequest(new { mensagem = "Dados inválidos." });
 
             _context.Empresas.Add(empresa);
             await _context.SaveChangesAsync();
 
             var url = GetByIdUrl(empresa.IdEmpresa);
 
-            var result = new EmpresaOutput
+            var result = new
             {
-                IdEmpresa = empresa.IdEmpresa,
-                Nome = empresa.Nome,
-                Cnpj = empresa.Cnpj,
-                Email = empresa.Email
+                empresa.IdEmpresa,
+                empresa.Nome,
+                empresa.Cnpj,
+                empresa.Email,
+                links = new List<object>
+                {
+                    new { rel = "self", href = url, method = "GET" },
+                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
+                }
             };
 
-            return Created(url, new { result, links = GenerateLinks(empresa.IdEmpresa) });
+            return Created(url, result);
         }
 
-        // ============================================================
+        
         // PUT: api/v1/empresa/{id}
-        // ============================================================
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] EmpresaUpdateInput input)
+        public async Task<IActionResult> Update(int id, [FromBody] Empresa updated)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (updated == null)
+                return BadRequest(new { mensagem = "Dados inválidos." });
 
             var empresa = await _context.Empresas.FindAsync(id);
             if (empresa == null)
                 return NotFound(new { mensagem = "Empresa não encontrada." });
 
-            empresa.Nome = input.Nome ?? empresa.Nome;
-            empresa.Email = input.Email ?? empresa.Email;
+            empresa.Nome = updated.Nome ?? empresa.Nome;
+            empresa.Cnpj = updated.Cnpj ?? empresa.Cnpj;
+            empresa.Email = updated.Email ?? empresa.Email;
+            empresa.Senha = updated.Senha ?? empresa.Senha;
+            empresa.RefreshToken = updated.RefreshToken ?? empresa.RefreshToken;
+            empresa.ExpiraRefreshToken = updated.ExpiraRefreshToken ?? empresa.ExpiraRefreshToken;
 
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
-        // ============================================================
+        
         // DELETE: api/v1/empresa/{id}
-        // ============================================================
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -169,18 +163,6 @@ namespace JobFitScoreAPI.Controllers.v1
 
             return NoContent();
         }
-
-        // ============================================================
-        // HATEOAS HELPERS
-        // ============================================================
-        private IEnumerable<object> GenerateLinks(int id) =>
-            new List<object>
-            {
-                new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                new { rel = "update", href = GetByIdUrl(id), method = "PUT" },
-                new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
-                new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-            };
 
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Empresa", new { id }) ?? string.Empty;

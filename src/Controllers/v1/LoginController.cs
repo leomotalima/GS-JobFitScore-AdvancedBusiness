@@ -1,68 +1,42 @@
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;
 using JobFitScoreAPI.Models;
 using JobFitScoreAPI.Services;
-using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/login")]
+    [ApiVersion("1.0")]
     public class LoginController : ControllerBase
     {
-        private readonly AppDbContext _context;
         private readonly JwtService _jwtService;
 
-        public LoginController(AppDbContext context, JwtService jwtService)
+        public LoginController(JwtService jwtService)
         {
-            _context = context;
             _jwtService = jwtService;
         }
 
-        // DTOs
-        public class LoginDto
-        {
-            public string Email { get; set; } = string.Empty;
-            public string Senha { get; set; } = string.Empty;
-        }
-
-        public class LoginResponseDto
-        {
-            public string Token { get; set; } = string.Empty;
-            public string Email { get; set; } = string.Empty;
-        }
-
-        // POST: api/v1/login
         [HttpPost]
-        public IActionResult Login([FromBody] LoginDto login)
+        public IActionResult Autenticar([FromBody] UsuarioLogin usuarioLogin)
         {
-            if (login == null || string.IsNullOrWhiteSpace(login.Email) || string.IsNullOrWhiteSpace(login.Senha))
-                return BadRequest(new { message = "Dados inválidos." });
-
-            var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == login.Email);
-
-            // Mensagem genérica para evitar "user enumeration"
-            var mensagemErro = new { message = "Usuário ou senha inválidos." };
-
-            if (usuario == null)
-                return Unauthorized(mensagemErro);
-
-            bool senhaOk = BCrypt.Net.BCrypt.Verify(login.Senha, usuario.Senha);
-
-            if (!senhaOk)
-                return Unauthorized(mensagemErro);
-
-            var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
-
-            var response = new LoginResponseDto
+            if (usuarioLogin == null || string.IsNullOrEmpty(usuarioLogin.Email) || string.IsNullOrEmpty(usuarioLogin.Senha))
             {
-                Token = token,
-                Email = usuario.Email
-            };
+                return BadRequest(new { mensagem = "Dados de login inválidos." });
+            }
 
-            return Ok(response);
+            
+            bool usuarioValido = (usuarioLogin.Email == "teste@jobfit.com" && usuarioLogin.Senha == "123456");
+            if (!usuarioValido)
+                return Unauthorized(new { mensagem = "Usuário ou senha inválidos." });
+
+            // ID fictício para teste (em produção, pegue do banco)
+            int usuarioId = 1;
+
+            // Gerar token usando o ID fictício e o email do usuário
+            var token = _jwtService.GenerateToken(usuarioId, usuarioLogin.Email);
+
+            return Ok(new { token });
         }
     }
 }

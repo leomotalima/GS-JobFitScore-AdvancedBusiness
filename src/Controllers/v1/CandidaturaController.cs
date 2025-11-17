@@ -1,5 +1,4 @@
 using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
@@ -8,171 +7,165 @@ using JobFitScoreAPI.Models;
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion(1.0)]
+    [Route("api/v{version:apiVersion}/candidaturas")]
     public class CandidaturaController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly LinkGenerator _linkGenerator;
 
-        public CandidaturaController(AppDbContext context, LinkGenerator linkGenerator)
+        public CandidaturaController(AppDbContext context)
         {
             _context = context;
-            _linkGenerator = linkGenerator;
         }
 
-        // ============================================================
-        // GET: api/v1/candidatura?page=1&pageSize=5
-        // ============================================================
+        // GET: api/v1/candidaturas
         [HttpGet]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 5)
+        public async Task<IActionResult> GetCandidaturas()
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { mensagem = "Parâmetros de paginação inválidos." });
-
-            var total = await _context.Candidaturas.CountAsync();
-
             var candidaturas = await _context.Candidaturas
-                .Include(c => c.Usuario)
                 .Include(c => c.Vaga)
-                .OrderByDescending(c => c.DataCandidatura)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Include(c => c.Usuario)
                 .Select(c => new
                 {
                     c.IdCandidatura,
-                    Usuario = c.Usuario != null ? c.Usuario.Nome : "Usuário não definido",
-                    Vaga = c.Vaga != null ? c.Vaga.Titulo : "Vaga não definida",
-                    c.Score,
-                    c.DataCandidatura
+                    Usuario = new
+                    {
+                        c.Usuario!.IdUsuario,
+                        c.Usuario!.Nome,
+                        Email = c.Usuario!.Email ?? string.Empty
+                    },
+                    Vaga = new
+                    {
+                        c.Vaga!.IdVaga,
+                        c.Vaga!.Titulo
+                    },
+                    c.DataCandidatura,
+                    c.Status
                 })
                 .ToListAsync();
 
-            var result = new
+            return Ok(new
             {
-                totalItems = total,
-                currentPage = page,
-                pageSize,
-                totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = candidaturas,
-                links = new List<object>
-                {
-                    new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
-                    new { rel = "next", href = GetPageUrl(page + 1, pageSize), method = "GET" },
-                    new { rel = "previous", href = GetPageUrl(page - 1, pageSize), method = "GET" }
-                }
-            };
-
-            return Ok(result);
+                success = true,
+                message = "Candidaturas listadas com sucesso.",
+                data = candidaturas
+            });
         }
 
-        // ============================================================
-        // GET: api/v1/candidatura/{id}
-        // ============================================================
+        // GET: api/v1/candidaturas/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetCandidatura(int id)
         {
             var candidatura = await _context.Candidaturas
-                .Include(c => c.Usuario)
                 .Include(c => c.Vaga)
-                .FirstOrDefaultAsync(c => c.IdCandidatura == id);
+                .Include(c => c.Usuario)
+                .Where(c => c.IdCandidatura == id)
+                .Select(c => new
+                {
+                    c.IdCandidatura,
+                    Usuario = new
+                    {
+                        c.Usuario!.IdUsuario,
+                        c.Usuario!.Nome,
+                        Email = c.Usuario!.Email ?? string.Empty
+                    },
+                    Vaga = new
+                    {
+                        c.Vaga!.IdVaga,
+                        c.Vaga!.Titulo
+                    },
+                    c.DataCandidatura,
+                    c.Status
+                })
+                .FirstOrDefaultAsync();
 
             if (candidatura == null)
-                return NotFound(new { mensagem = "Candidatura não encontrada." });
-
-            var result = new
             {
-                candidatura.IdCandidatura,
-                Usuario = candidatura.Usuario?.Nome ?? "Usuário não definido",
-                Vaga = candidatura.Vaga?.Titulo ?? "Vaga não definida",
-                candidatura.Score,
-                candidatura.DataCandidatura,
-                links = new List<object>
+                return NotFound(new
                 {
-                    new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
-            };
+                    success = false,
+                    message = "Candidatura não encontrada."
+                });
+            }
 
-            return Ok(result);
+            return Ok(new
+            {
+                success = true,
+                message = "Candidatura encontrada com sucesso.",
+                data = candidatura
+            });
         }
 
-        // ============================================================
-        // POST: api/v1/candidatura
-        // ============================================================
+        // POST: api/v1/candidaturas
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Candidatura candidatura)
+        public async Task<IActionResult> CreateCandidatura([FromBody] Candidatura candidatura)
         {
-            if (candidatura == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             _context.Candidaturas.Add(candidatura);
             await _context.SaveChangesAsync();
 
-            var url = GetByIdUrl(candidatura.IdCandidatura);
-
-            var result = new
+            return Ok(new
             {
-                candidatura.IdCandidatura,
-                candidatura.Score,
-                candidatura.DataCandidatura,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 5), method = "GET" }
-                }
-            };
-
-            return Created(url, result);
+                success = true,
+                message = "Candidatura criada com sucesso.",
+                data = candidatura
+            });
         }
 
-        // ============================================================
-        // PUT: api/v1/candidatura/{id}
-        // ============================================================
+        // PUT: api/v1/candidaturas/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Candidatura atualizada)
+        public async Task<IActionResult> UpdateCandidatura(int id, [FromBody] Candidatura candidatura)
         {
-            if (atualizada == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
+            var existente = await _context.Candidaturas.FindAsync(id);
 
-            var candidatura = await _context.Candidaturas.FindAsync(id);
-            if (candidatura == null)
-                return NotFound(new { mensagem = "Candidatura não encontrada." });
+            if (existente == null)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Candidatura não encontrada."
+                });
+            }
 
-            candidatura.Score = atualizada.Score ?? candidatura.Score;
-            candidatura.IdUsuario = atualizada.IdUsuario != 0 ? atualizada.IdUsuario : candidatura.IdUsuario;
-            candidatura.IdVaga = atualizada.IdVaga != 0 ? atualizada.IdVaga : candidatura.IdVaga;
+            existente.UsuarioId = candidatura.UsuarioId;
+            existente.VagaId = candidatura.VagaId;
+            existente.Status = candidatura.Status ?? existente.Status;
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new
+            {
+                success = true,
+                message = "Candidatura atualizada com sucesso.",
+                data = existente
+            });
         }
 
-        // ============================================================
-        // DELETE: api/v1/candidatura/{id}
-        // ============================================================
+        // DELETE: api/v1/candidaturas/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteCandidatura(int id)
         {
             var candidatura = await _context.Candidaturas.FindAsync(id);
+
             if (candidatura == null)
-                return NotFound(new { mensagem = "Candidatura não encontrada." });
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    message = "Candidatura não encontrada."
+                });
+            }
 
             _context.Candidaturas.Remove(candidatura);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new
+            {
+                success = true,
+                message = "Candidatura removida com sucesso."
+            });
         }
-
-        // ============================================================
-        // MÉTODOS AUXILIARES HATEOAS
-        // ============================================================
-        private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "Candidatura", new { id })
-            ?? string.Empty;
-
-        private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "Candidatura", new { page, pageSize })
-            ?? string.Empty;
     }
 }

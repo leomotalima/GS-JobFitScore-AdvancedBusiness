@@ -1,5 +1,10 @@
-using Microsoft.ML;
+using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
+using Microsoft.EntityFrameworkCore;
+using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using Microsoft.ML;
+
 
 namespace JobFitScoreAPI.Services
 {

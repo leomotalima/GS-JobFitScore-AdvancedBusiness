@@ -1,14 +1,14 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
 using JobFitScoreAPI.Models;
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [Asp.Versioning.ApiVersion("1.0")]
     public class AuditoriaLogController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -20,9 +20,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // =====================================================
         // GET: api/v1/AuditoriaLog?page=1&pageSize=10
-        // =====================================================
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
@@ -44,7 +42,16 @@ namespace JobFitScoreAPI.Controllers.v1
                 currentPage = page,
                 pageSize,
                 totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = logs,
+                data = logs.Select(l => new
+                {
+                    l.IdAuditoria,
+                    l.NomeTabela,
+                    l.Operacao,
+                    l.RegistroId,
+                    l.UsuarioBanco,
+                    l.DataOperacao,
+                    l.Detalhe
+                }),
                 links = new List<object>
                 {
                     new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
@@ -56,9 +63,8 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // =====================================================
+        
         // GET: api/v1/AuditoriaLog/{id}
-        // =====================================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -86,10 +92,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // =====================================================
-        // Métodos auxiliares
-        // =====================================================
-
+        // Métodos auxiliares para gerar links
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(
                 HttpContext,

@@ -1,15 +1,15 @@
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobFitScoreAPI.Data;
+using Microsoft.AspNetCore.Mvc;   
+using Asp.Versioning;              
+using Microsoft.EntityFrameworkCore; 
+using JobFitScoreAPI.Data;         
 using JobFitScoreAPI.Models;
+
 
 namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [Asp.Versioning.ApiVersion("1.0")]
     public class UsuarioHabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -21,16 +21,8 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // DTO de entrada
-        public class UsuarioHabilidadeInput
-        {
-            public int UsuarioId { get; set; }
-            public int HabilidadeId { get; set; }
-        }
-
-        // ============================================================
+       
         // GET: api/v1/usuariohabilidade?page=1&pageSize=10
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
@@ -39,18 +31,17 @@ namespace JobFitScoreAPI.Controllers.v1
 
             var total = await _context.UsuarioHabilidades.CountAsync();
 
-            var registros = await _context.UsuarioHabilidades
-                .Include(u => u.Usuario)
-                .Include(h => h.Habilidade)
-                .OrderBy(u => u.IdUsuarioHabilidade)
+            var lista = await _context.UsuarioHabilidades
+                .Include(uh => uh.Usuario)
+                .Include(uh => uh.Habilidade)
+                .OrderBy(uh => uh.IdUsuarioHabilidade)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .AsNoTracking()
-                .Select(x => new
+                .Select(uh => new
                 {
-                    x.IdUsuarioHabilidade,
-                    Usuario = x.Usuario != null ? x.Usuario.Nome : null,
-                    Habilidade = x.Habilidade != null ? x.Habilidade.Nome : null
+                    uh.IdUsuarioHabilidade,
+                    Usuario = uh.Usuario != null ? uh.Usuario.Nome : "Usuário não definido",
+                    Habilidade = uh.Habilidade != null ? uh.Habilidade.Nome : "Habilidade não definida"
                 })
                 .ToListAsync();
 
@@ -60,7 +51,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 currentPage = page,
                 pageSize,
                 totalPages = (int)Math.Ceiling((double)total / pageSize),
-                data = registros,
+                data = lista,
                 links = new List<object>
                 {
                     new { rel = "self", href = GetPageUrl(page, pageSize), method = "GET" },
@@ -72,79 +63,27 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
-        // POST: api/v1/usuariohabilidade
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] UsuarioHabilidadeInput input)
-        {
-            if (input == null)
-                return BadRequest(new { mensagem = "Dados inválidos." });
-
-            // valida usuário
-            var usuario = await _context.Usuarios.FindAsync(input.UsuarioId);
-            if (usuario == null)
-                return NotFound(new { mensagem = "Usuário não encontrado." });
-
-            // valida habilidade
-            var habilidade = await _context.Habilidades.FindAsync(input.HabilidadeId);
-            if (habilidade == null)
-                return NotFound(new { mensagem = "Habilidade não encontrada." });
-
-            // verifica duplicidade
-            bool existe = await _context.UsuarioHabilidades
-                .AnyAsync(x => x.UsuarioId == input.UsuarioId && x.HabilidadeId == input.HabilidadeId);
-
-            if (existe)
-                return Conflict(new { mensagem = "Usuário já possui esta habilidade cadastrada." });
-
-            var novo = new UsuarioHabilidade
-            {
-                UsuarioId = input.UsuarioId,
-                HabilidadeId = input.HabilidadeId
-            };
-
-            _context.UsuarioHabilidades.Add(novo);
-            await _context.SaveChangesAsync();
-
-            var url = GetByIdUrl(novo.IdUsuarioHabilidade);
-
-            return Created(url, new
-            {
-                novo.IdUsuarioHabilidade,
-                Usuario = usuario.Nome,
-                Habilidade = habilidade.Nome,
-                links = new List<object>
-                {
-                    new { rel = "self", href = url, method = "GET" },
-                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
-                }
-            });
-        }
-
-        // ============================================================
+       
         // GET: api/v1/usuariohabilidade/{id}
-        // ============================================================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var registro = await _context.UsuarioHabilidades
+            var uh = await _context.UsuarioHabilidades
                 .Include(u => u.Usuario)
                 .Include(h => h.Habilidade)
                 .FirstOrDefaultAsync(x => x.IdUsuarioHabilidade == id);
 
-            if (registro == null)
-                return NotFound(new { mensagem = "Registro não encontrado." });
+            if (uh == null)
+                return NotFound(new { mensagem = "Relacionamento não encontrado." });
 
             var result = new
             {
-                registro.IdUsuarioHabilidade,
-                Usuario = registro.Usuario != null ? registro.Usuario.Nome : null,
-                Habilidade = registro.Habilidade != null ? registro.Habilidade.Nome : null,
+                uh.IdUsuarioHabilidade,
+                Usuario = uh.Usuario?.Nome ?? "Usuário não definido",
+                Habilidade = uh.Habilidade?.Nome ?? "Habilidade não definida",
                 links = new List<object>
                 {
                     new { rel = "self", href = GetByIdUrl(id), method = "GET" },
-                    new { rel = "delete", href = GetByIdUrl(id), method = "DELETE" },
                     new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
                 }
             };
@@ -152,31 +91,75 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
-        // ============================================================
-        // DELETE: api/v1/usuariohabilidade/{id}
-        // ============================================================
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        
+        // POST: api/v1/usuariohabilidade
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] UsuarioHabilidade nova)
         {
-            var registro = await _context.UsuarioHabilidades.FindAsync(id);
-            if (registro == null)
-                return NotFound(new { mensagem = "Registro não encontrado." });
+            if (nova == null || nova.UsuarioId == 0 || nova.HabilidadeId == 0)
+                return BadRequest(new { mensagem = "Dados inválidos." });
 
-            _context.UsuarioHabilidades.Remove(registro);
+            _context.UsuarioHabilidades.Add(nova);
+            await _context.SaveChangesAsync();
+
+            var url = GetByIdUrl(nova.IdUsuarioHabilidade);
+
+            var result = new
+            {
+                nova.IdUsuarioHabilidade,
+                nova.UsuarioId,
+                nova.HabilidadeId,
+                links = new List<object>
+                {
+                    new { rel = "self", href = url, method = "GET" },
+                    new { rel = "all", href = GetPageUrl(1, 10), method = "GET" }
+                }
+            };
+
+            return Created(url, result);
+        }
+
+       
+        // PUT: api/v1/usuariohabilidade/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UsuarioHabilidade atualizada)
+        {
+            if (atualizada == null || atualizada.UsuarioId == 0 || atualizada.HabilidadeId == 0)
+                return BadRequest(new { mensagem = "Dados inválidos." });
+
+            var uh = await _context.UsuarioHabilidades.FindAsync(id);
+            if (uh == null)
+                return NotFound(new { mensagem = "Relacionamento não encontrado." });
+
+            uh.UsuarioId = atualizada.UsuarioId;
+            uh.HabilidadeId = atualizada.HabilidadeId;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // ============================================================
-        // MÉTODOS AUXILIARES
-        // ============================================================
+       
+        // DELETE: api/v1/usuariohabilidade/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var uh = await _context.UsuarioHabilidades.FindAsync(id);
+            if (uh == null)
+                return NotFound(new { mensagem = "Relacionamento não encontrado." });
+
+            _context.UsuarioHabilidades.Remove(uh);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+       
+        // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "UsuarioHabilidade", new { id })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "UsuarioHabilidade", new { id }) ?? string.Empty;
 
         private string GetPageUrl(int page, int pageSize) =>
-            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "UsuarioHabilidade", new { page, pageSize })
-            ?? string.Empty;
+            _linkGenerator.GetUriByAction(HttpContext, nameof(GetAll), "UsuarioHabilidade", new { page, pageSize }) ?? string.Empty;
     }
 }
