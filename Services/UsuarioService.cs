@@ -25,7 +25,7 @@ namespace JobFitScoreAPI.Services
             if (usuario == null)
                 throw new Exception("Usuário ou senha inválidos.");
 
-            
+
             return _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
         }
     }
