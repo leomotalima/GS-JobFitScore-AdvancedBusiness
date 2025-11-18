@@ -11,7 +11,7 @@ namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/usuarios")]
+    [Route("api/v{version:apiVersion}/usuarios")] // Rota corrigida para plural
     [Tags("Usuários")]
     [Produces("application/json")]
     [Consumes("application/json")]
@@ -43,7 +43,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // GET - Listar usuários
         [HttpGet(Name = "GetUsuarios")]
-        [SwaggerOperation(Summary = "Lista todos os usuários", Description = "Retorna uma lista paginada de usuários.")]
+        [SwaggerOperation(Summary = "Lista todos os usuários")]
         [SwaggerResponse(StatusCodes.Status200OK, "Lista de usuários retornada com sucesso")]
         public async Task<IActionResult> GetUsuarios(int page = 1, int pageSize = 10)
         {
@@ -89,7 +89,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // GET - Buscar usuário por ID
         [HttpGet("{id}", Name = "GetUsuario")]
-        [SwaggerOperation(Summary = "Obtém um usuário específico", Description = "Retorna os detalhes de um usuário pelo ID.")]
+        [SwaggerOperation(Summary = "Obtém um usuário específico")]
         [SwaggerResponse(StatusCodes.Status200OK, "Usuário encontrado com sucesso")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Usuário não encontrado")]
         public async Task<IActionResult> GetUsuario(int id)
@@ -125,7 +125,7 @@ namespace JobFitScoreAPI.Controllers.v1
         // POST - Criar usuário (Aberto)
         [AllowAnonymous]
         [HttpPost(Name = "CreateUsuario")]
-        [SwaggerOperation(Summary = "Cria um novo usuário", Description = "Adiciona um novo usuário no sistema.")]
+        [SwaggerOperation(Summary = "Cria um novo usuário")]
         [SwaggerResponse(StatusCodes.Status201Created, "Usuário criado com sucesso")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro na requisição")]
         public async Task<IActionResult> CreateUsuario([FromBody] UsuarioInput input)

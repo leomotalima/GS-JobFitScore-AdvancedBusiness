@@ -24,7 +24,8 @@ namespace JobFitScore.Tests
                 habilidades = "C#, SQL"
             };
 
-            var response = await _client.PostAsJsonAsync("/api/v1/usuario", novoUsuario);
+            // Corrigido: rota plural "usuarios"
+            var response = await _client.PostAsJsonAsync("/api/v1/usuarios", novoUsuario);
 
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
