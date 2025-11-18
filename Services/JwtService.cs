@@ -19,7 +19,14 @@ namespace JobFitScoreAPI.Services
             _audience = configuration["Jwt:Audience"] ?? "JobFitScoreUsers";
         }
 
+        // Método original mantido para compatibilidade com v1
         public string GenerateToken(int userId, string email)
+        {
+            return GenerateToken(userId, email, "usuario");
+        }
+
+        // Método atualizado com suporte a tipo de usuário
+        public string GenerateToken(int userId, string email, string userType)
         {
             var keyBytes = Encoding.UTF8.GetBytes(_key);
             var credentials = new SigningCredentials(
@@ -31,7 +38,9 @@ namespace JobFitScoreAPI.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, userType), // "usuario" ou "empresa"
+                new Claim("user_type", userType) // Claim customizado adicional
             };
 
             var token = new JwtSecurityToken(
