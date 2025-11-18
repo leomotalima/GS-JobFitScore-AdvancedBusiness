@@ -59,6 +59,22 @@ builder.Services.AddScoped<JobFitMLService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ICandidaturaRepository, CandidaturaRepository>();
 builder.Services.AddScoped<IVagaRepository, VagaRepository>();
+builder.Services.AddScoped<IEmpresaRepository, EmpresaRepository>();
+builder.Services.AddScoped<IHabilidadeRepository, HabilidadeRepository>();
+
+// ----------------------
+// Services
+// ----------------------
+builder.Services.AddScoped<ICryptoService, CryptoService>();
+builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<CandidaturaService>();
+builder.Services.AddScoped<VagaService>();
+builder.Services.AddScoped<EmpresaService>();
+builder.Services.AddScoped<HabilidadeService>();
+builder.Services.AddScoped<UsuarioHabilidadeService>();
+builder.Services.AddScoped<VagaHabilidadeService>();
+builder.Services.AddScoped<AuditoriaLogService>();
+builder.Services.AddScoped<CursoService>();
 
 // ----------------------
 // Controllers
