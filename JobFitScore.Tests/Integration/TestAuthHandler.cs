@@ -1,25 +1,29 @@
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace JobFitScore.Tests.Integration
 {
-#pragma warning disable CS0618 // Suprimir warning de ISystemClock obsoleto
     public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public TestAuthHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder,
-            ISystemClock clock) 
-            : base(options, logger, encoder, clock) { }
+            UrlEncoder encoder)
+            : base(options, logger, encoder)
+        {
+        }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var claims = new[] { new Claim(ClaimTypes.Name, "TestUser") };
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, "TestUser"),
+                new Claim(ClaimTypes.Email, "test@teste.com")
+            };
+
             var identity = new ClaimsIdentity(claims, "Test");
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, "Test");
@@ -27,5 +31,4 @@ namespace JobFitScore.Tests.Integration
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
     }
-#pragma warning restore CS0618
 }

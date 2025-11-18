@@ -6,10 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
-using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using JobFitScore.Tests.Integration;
-
 
 namespace JobFitScore.Tests
 {
@@ -35,34 +32,23 @@ namespace JobFitScore.Tests
                 services.AddAuthentication("Test")
                     .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
 
-                // API Versioning
-                services.AddApiVersioning(options =>
-                {
-                    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
-                    options.AssumeDefaultVersionWhenUnspecified = true;
-                    options.ReportApiVersions = true;
-                    options.ApiVersionReader = new Asp.Versioning.UrlSegmentApiVersionReader();
-                });
-
-                services.AddVersionedApiExplorer(options =>
-                {
-                    options.GroupNameFormat = "'v'VVV";
-                    options.SubstituteApiVersionInUrl = true;
-                });
-
-                // Build provider e criar banco
+                // Inicializa os dados de teste no banco InMemory
                 var sp = services.BuildServiceProvider();
                 using var scope = sp.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                // Garante que o banco seja limpo antes de rodar os testes
                 db.Database.EnsureDeleted();
                 db.Database.EnsureCreated();
 
+                // Insere um usuário de teste no banco
                 db.Usuarios.Add(new Usuario
                 {
                     Nome = "Login Teste",
                     Email = "login@teste.com",
                     Senha = BCrypt.Net.BCrypt.HashPassword("123456")
                 });
+
                 db.SaveChanges();
             });
         }
