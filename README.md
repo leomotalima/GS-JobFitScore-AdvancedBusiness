@@ -201,14 +201,11 @@ Antes de executar o projeto, certifique-se de ter instalado:
 git clone https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness.git
 cd GS-JobFitScore-AdvancedBusiness
 ```
-# Entrar na pasta do projeto .NET
-cd JobFitScoreAPI
-
 ---
 
 ### 2️⃣ Configurar as credenciais do banco de dados
 
-Crie um arquivo .env dentro da pasta GS-JobFitScore-AdvancedBusiness/JobFitScoreAPI e configure as credenciais do Oracle:
+Crie um arquivo .env na raiz do projeto e configure as credenciais do Oracle:
 
 ```env
 ORACLE_USER_ID=<Seu Username Oracle>
