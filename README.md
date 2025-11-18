@@ -227,7 +227,7 @@ Execute os seguintes comandos no terminal:
 
 ```bash
 # Entrar na pasta do projeto .NET
-cd src
+cd GS-JobFitScore-AdvancedBusiness/JobFitScoreAPI
 
 # Instalar Entity Framework CLI globalmente (se ainda não tiver)
 dotnet tool install --global dotnet-ef
