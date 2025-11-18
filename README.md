@@ -223,9 +223,6 @@ ConnectionStrings__OracleConnection=User Id=${ORACLE_USER_ID};Password=${ORACLE_
 Execute os seguintes comandos no terminal:
 
 ```bash
-# Entrar na pasta do projeto .NET
-cd GS-JobFitScore-AdvancedBusiness/JobFitScoreAPI
-
 # Instalar Entity Framework CLI globalmente (se ainda não tiver)
 dotnet tool install --global dotnet-ef
 
