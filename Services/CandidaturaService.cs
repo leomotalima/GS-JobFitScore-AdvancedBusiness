@@ -24,24 +24,23 @@ namespace JobFitScoreAPI.Services
             if (usuario == null || vaga == null)
                 throw new Exception("Usuário ou vaga não encontrada.");
 
-            // Cria os dados de entrada para o modelo ML
+            
             var dadosEntrada = new JobFitData
             {
-                ExperienciaAnos = 3, // exemplo (poderia vir do usuário)
+                ExperienciaAnos = 3, 
                 HabilidadesMatch = CalcularHabilidadesMatch(usuario, vaga),
-                CursosRelacionados = 1, // exemplo
-                NivelVaga = 2, // exemplo
-                ScoreCompatibilidade = 0 // campo usado apenas no treinamento
-            };
+                CursosRelacionados = 1, 
+                NivelVaga = 2, 
+                ScoreCompatibilidade = 0             };
 
             float score = _mlService.PreverCompatibilidade(dadosEntrada);
 
-            // Cria a candidatura
+            
             var candidatura = new Candidatura
             {
                 UsuarioId = usuarioId,
                 VagaId = vagaId
-                // Score e DataCandidatura não existem no model, então não adicionamos
+                
             };
 
             _context.Candidaturas.Add(candidatura);
@@ -52,9 +51,7 @@ namespace JobFitScoreAPI.Services
 
         private int CalcularHabilidadesMatch(Usuario usuario, Vaga vaga)
         {
-            // Aqui você precisa acessar as habilidades do usuário e da vaga
-            // Se você ainda não tem uma tabela de relacionamento, o método precisa ser ajustado
-            return 0; // placeholder para evitar erro
+            return 0; 
         }
     }
 }
