@@ -241,7 +241,7 @@ ConnectionStrings__OracleConnection=User Id=${ORACLE_USER_ID};Password=${ORACLE_
 
 ```bash
 # Instalar Entity Framework CLI (se ainda não tiver)
-dotnet tool install --global dotnet-ef
+❯ dotnet tool install --global dotnet-ef --version 8.0.0
 
 # Restaurar pacotes NuGet
 dotnet restore
@@ -261,63 +261,105 @@ dotnet ef database update --context AppDbContext
 dotnet run
 ```
 
-A API estará disponível em:  
-**🌐 [http://localhost:5224/swagger/index.html](http://localhost:5224/swagger/index.html)**
-
 ---
 
 ## 📂 Estrutura do Projeto
 
 ```
-GS-JobFitScore-AdvancedBusiness/
-├── JobFitScoreAPI/           # Projeto principal da API
-│   ├── Controllers/          # Endpoints da API
-│   ├── Data/                 # DbContext e configurações EF
-│   ├── Dtos/                 # Data Transfer Objects
-│   ├── Models/               # Entidades do domínio
-│   ├── Repositories/         # Acesso a dados
-│   ├── Services/             # Lógica de negócio
-│   ├── Migrations/           # Migrações do EF Core
-│   ├── Static/               # Arquivos estáticos
-│   ├── Swagger/              # Configurações Swagger
-│   ├── Properties/           # Propriedades do projeto
-│   ├── Program.cs            # Ponto de entrada da aplicação
-│   └── appsettings.json      # Configurações da aplicação
-│
-├── JobFitScore.Tests/        # Testes automatizados
-│
-├── .gitignore
-├── .env                      # Variáveis de ambiente (criar manualmente)
+├── appsettings.Development.json
+├── appsettings.json
+├── Controllers
+│   └── v1
+│       ├── AuditoriaLogController.cs
+│       ├── CandidaturaController.cs
+│       ├── CursoController.cs
+│       ├── EmpresaController.cs
+│       ├── HabilidadeController.cs
+│       ├── HealthCheckController.cs
+│       ├── LoginController.cs
+│       ├── UsuarioController.cs
+│       ├── UsuarioHabilidadeController.cs
+│       ├── VagaController.cs
+│       └── VagaHabilidadeController.cs
+├── Data
+│   └── AppDbContext.cs
+├── Dtos
+│   ├── Candidatura
+│   │   ├── CandidaturaInput.cs
+│   │   └── CandidaturaOutput.cs
+│   ├── Curso
+│   │   ├── CursoInput.cs
+│   │   └── CursoOutput.cs
+│   ├── Empresa
+│   │   ├── EmpresaInput.cs
+│   │   ├── EmpresaOutput.cs
+│   │   └── EmpresaUpdateInput.cs
+│   ├── Habilidade
+│   │   ├── HabilidadeInput.cs
+│   │   └── HabilidadeOutput.cs
+│   ├── Usuario
+│   │   ├── JobFitEntradaDto.cs
+│   │   ├── JobFitResultadoDto.cs
+│   │   ├── UsuarioInput.cs
+│   │   ├── UsuarioOutput.cs
+│   │   └── UsuarioUpdateInput.cs
+│   ├── UsuarioHabilidade
+│   │   ├── UsuarioHabilidadeInput.cs
+│   │   └── UsuarioHabilidadeOutput.cs
+│   ├── Vaga
+│   │   ├── VagaInput.cs
+│   │   ├── VagaOutput.cs
+│   │   └── VagaUpdateInput.cs
+│   └── VagaHabilidade
+│       ├── VagaHabilidadeInput.cs
+│       └── VagaHabilidadeOutput.cs
+├── JobFitScoreAPI.csproj
+├── Migrations
+│   ├── 20251118123604_InitialCreate.cs
+│   ├── 20251118123604_InitialCreate.Designer.cs
+│   └── AppDbContextModelSnapshot.cs
+├── Models
+│   ├── AuditoriaLog.cs
+│   ├── Candidatura.cs
+│   ├── Curso.cs
+│   ├── Empresa.cs
+│   ├── Habilidade.cs
+│   ├── JobFitData.cs
+│   ├── Usuario.cs
+│   ├── UsuarioHabilidade.cs
+│   ├── UsuarioLogin.cs
+│   ├── Vaga.cs
+│   └── VagaHabilidade.cs
+├── Program.cs
+├── Properties
+│   └── launchSettings.json
 ├── README.md
-└── GS-JobFitScore-AdvancedBusiness.sln
-```
+├── Repositories
+│   ├── CandidaturaRepository.cs
+│   ├── EmpresaRepository.cs
+│   ├── HabilidadeRepository.cs
+│   ├── ICandidaturaRepository.cs
+│   ├── IEmpresaRepository.cs
+│   ├── IHabilidadeRepository.cs
+│   ├── IUsuarioRepository.cs
+│   ├── IVagaRepository.cs
+│   ├── UsuarioRepository.cs
+│   └── VagaRepository.cs
+├── Scripts
+│   ├── inserts.sql
+│   ├── ml_jobfitscore.csv
+│   └── remover-todas-tabelas.sql
+├── Services
+│   ├── CandidaturaService.cs
+│   ├── JobFitMLService.cs
+│   ├── JwtService.cs
+│   └── UsuarioService.cs
+├── Static
+│   └── images
+│       └── logo.png
+└── Swagger
+    └── SwaggerFilters.cs
 
----
-
-## 💚 Health Check
-
-Verificação de saúde da API:
-
-```http
-GET /api/health/ping
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "message": "API rodando com sucesso 🚀",
-  "data": {
-    "status": "Healthy",
-    "version": "1.0.0",
-    "uptime": "00:15:42",
-    "environment": "Development",
-    "host": "localhost",
-    "timestampUtc": "2025-11-10T12:50:01.517Z"
-  },
-  "statusCode": 200,
-  "timestampUtc": "2025-11-10T12:50:01.517Z"
-}
 ```
 
 ---
