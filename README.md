@@ -12,10 +12,10 @@
 
 ---
 
-### 🧠 Sobre o Projeto
+## 🧠 Sobre o Projeto
 
-API RESTful desenvolvida em <b>.NET 8</b> para o cálculo de compatibilidade profissional entre candidatos e vagas, 
-utilizando análise de habilidades e requisitos com base em técnicas de <b>inteligência computacional</b>.
+API RESTful desenvolvida em **.NET 8** para cálculo de compatibilidade profissional entre candidatos e vagas, 
+utilizando análise de habilidades e requisitos com base em técnicas de **inteligência computacional**.
 
 ---
 
@@ -30,10 +30,24 @@ utilizando análise de habilidades e requisitos com base em técnicas de <b>inte
   <img src="https://img.shields.io/badge/FIAP-ED145B?style=for-the-badge"/>
 </p>
 
+---
+
+## 📋 Índice
+
+- [Arquitetura do Sistema](#arquitetura-do-sistema)
+- [Funcionalidades Principais](#funcionalidades-principais)
+- [Cálculo de Compatibilidade](#cálculo-de-compatibilidade)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Pré-requisitos](#pré-requisitos)
+- [Execução Local](#execução-local)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Health Check](#health-check)
+- [Equipe de Desenvolvimento](#equipe-de-desenvolvimento)
+- [Licença](#licença)
 
 ---
 
-## Arquitetura do Sistema
+## 🏗️ Arquitetura do Sistema
 
 O sistema segue arquitetura em camadas (**Controller → Service → Repository → Data → Model**), garantindo modularidade e manutenibilidade.
 
@@ -89,24 +103,24 @@ graph LR
 
 ---
 
-## Funcionalidades Principais
+## ✨ Funcionalidades Principais
 
-- CRUD completo para Usuários, Vagas, Candidaturas e Cursos  
-- Cálculo de **Score de Compatibilidade** entre perfis e vagas  
-- Autenticação JWT e proteção de endpoints  
-- HATEOAS em todas as respostas  
-- Versionamento de API (v1, v2)  
-- Health Check (`/api/health/ping`)  
-- Swagger/OpenAPI documentado com anotações  
-- Estrutura preparada para **Machine Learning com ML.NET**
+- ✅ CRUD completo para Usuários, Vagas, Candidaturas e Cursos  
+- 🎯 Cálculo de **Score de Compatibilidade** entre perfis e vagas  
+- 🔐 Autenticação JWT e proteção de endpoints  
+- 🔗 HATEOAS em todas as respostas  
+- 📦 Versionamento de API (v1, v2)  
+- 💚 Health Check (`/api/health/ping`)  
+- 📚 Swagger/OpenAPI documentado com anotações  
+- 🤖 Estrutura preparada para **Machine Learning com ML.NET**
 
 ---
 
-## Cálculo de Compatibilidade
+## 🎯 Cálculo de Compatibilidade
 
 O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) para calcular o **percentual de compatibilidade** entre candidatos e vagas.
 
-### 📊 Exemplo de Avaliação de Match
+### 📊 Parâmetros de Avaliação
 
 | Parâmetro | Descrição | Peso (%) |
 |-----------|-----------|----------|
@@ -117,7 +131,7 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
 
 ---
 
-### 🔍 Exemplo de Resultado do Score
+### 🔍 Exemplo de Resultado
 
 ```json
 {
@@ -131,16 +145,16 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
 }
 ```
 
-**Resultado esperado:** Score alto com sugestões de cursos para aprimorar o perfil profissional.
+**Interpretação:** Score alto com sugestões de cursos para aprimorar o perfil profissional.
 
 ---
 
-### 🎯 Endpoint de Cálculo de Score
+### 📡 Endpoint de Cálculo
 
 **Método:** `POST`  
 **URL:** `/api/v1/candidaturas/calcular-score`
 
-**Corpo da requisição:**
+**Request Body:**
 ```json
 {
   "idUsuario": 1,
@@ -148,7 +162,7 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
 }
 ```
 
-**Resposta de sucesso (200 OK):**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -169,7 +183,7 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
 
 ---
 
-## Tecnologias Utilizadas
+## 🛠️ Tecnologias Utilizadas
 
 | Tecnologia | Descrição |
 |-------------|------------|
@@ -180,20 +194,21 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
 | **xUnit** | Testes de unidade e integração |
 | **HATEOAS** | Navegação via links semânticos |
 | **Oracle / InMemory** | Suporte a múltiplos bancos de dados |
+| **ML.NET** | Engine de Machine Learning (futuro) |
 
 ---
 
-## Pré-requisitos
+## 📦 Pré-requisitos
 
 Antes de executar o projeto, certifique-se de ter instalado:
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Oracle Database](https://www.oracle.com/database/technologies/oracle-database-software-downloads.html)
-- [Oracle SQL Developer para VSCode](https://marketplace.visualstudio.com/items?itemName=Oracle.sql-developer)
+- [Oracle SQL Developer para VSCode](https://marketplace.visualstudio.com/items?itemName=Oracle.sql-developer) *(opcional)*
 
 ---
 
-## Execução Local
+## 🚀 Execução Local
 
 ### 1️⃣ Clonar o repositório
 
@@ -204,9 +219,14 @@ cd GS-JobFitScore-AdvancedBusiness
 
 ---
 
-### 2️⃣ Configurar as credenciais do banco de dados
+### 2️⃣ Configurar credenciais do banco de dados
 
-Crie um arquivo `.env` na raiz do projeto e configure as credenciais do Oracle:
+1. Entre na pasta da API
+```bash
+cd JobFitScoreAPI
+```
+
+2. Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 ORACLE_USER_ID=<Seu Username Oracle>
@@ -215,19 +235,12 @@ ORACLE_DATA_SOURCE=host:porta/nome_do_serviço
 ConnectionStrings__OracleConnection=User Id=${ORACLE_USER_ID};Password=${ORACLE_PASSWORD};Data Source=${ORACLE_DATA_SOURCE}
 ```
 
-> **⚠️ IMPORTANTE:** Altere os valores de `ORACLE_USER_ID`, `ORACLE_PASSWORD` e `ORACLE_DATA_SOURCE` conforme seu ambiente Oracle local.
-
 ---
 
-### 3️⃣ Instalar ferramentas e dependências
-
-Execute os seguintes comandos no terminal:
+### 3️⃣ Instalar dependências
 
 ```bash
-# Entrar na pasta do projeto .NET
-cd src
-
-# Instalar Entity Framework CLI globalmente (se ainda não tiver)
+# Instalar Entity Framework CLI (se ainda não tiver)
 dotnet tool install --global dotnet-ef
 
 # Restaurar pacotes NuGet
@@ -237,54 +250,59 @@ dotnet restore
 dotnet build
 
 # Aplicar migrations no banco de dados
-dotnet ef database update
+dotnet ef database update --context AppDbContext
+```
 
 ---
 
 ### 4️⃣ Executar a aplicação
 
-Volte para a raiz do projeto (se estiver na pasta Scripts):
-
-```bash
-cd ..
-```
-
-Execute a aplicação:
-
 ```bash
 dotnet run
 ```
 
-A API estará disponível em: **[http://localhost:5224/swagger/index.html](http://localhost:5224/swagger/index.html)**
+A API estará disponível em:  
+**🌐 [http://localhost:5224/swagger/index.html](http://localhost:5224/swagger/index.html)**
 
 ---
 
-## Estrutura do Projeto
+## 📂 Estrutura do Projeto
 
 ```
-JobFitScore/
-├── Controllers/           # Endpoints da API
-├── Data/                 # DbContext e configurações EF
-├── DTOs/                 # Data Transfer Objects
-├── Hateoas/              # Implementação HATEOAS
-├── Models/               # Entidades do domínio
-├── Repositories/         # Acesso a dados
-├── Services/             # Lógica de negócio
-├── Swagger/              # Configurações Swagger
-├── Scripts/              # Scripts SQL (inserts.sql)
-├── JobFitScore.Tests/    # Testes automatizados
-├── Program.cs            # Ponto de entrada da aplicação
-├── .env                  # Variáveis de ambiente (criar manualmente)
-└── README.md
+GS-JobFitScore-AdvancedBusiness/
+├── JobFitScoreAPI/           # Projeto principal da API
+│   ├── Controllers/          # Endpoints da API
+│   ├── Data/                 # DbContext e configurações EF
+│   ├── Dtos/                 # Data Transfer Objects
+│   ├── Models/               # Entidades do domínio
+│   ├── Repositories/         # Acesso a dados
+│   ├── Services/             # Lógica de negócio
+│   ├── Migrations/           # Migrações do EF Core
+│   ├── Static/               # Arquivos estáticos
+│   ├── Swagger/              # Configurações Swagger
+│   ├── Properties/           # Propriedades do projeto
+│   ├── Program.cs            # Ponto de entrada da aplicação
+│   └── appsettings.json      # Configurações da aplicação
+│
+├── JobFitScore.Tests/        # Testes automatizados
+│
+├── .gitignore
+├── .env                      # Variáveis de ambiente (criar manualmente)
+├── README.md
+└── GS-JobFitScore-AdvancedBusiness.sln
 ```
 
 ---
 
-## Health Check
+## 💚 Health Check
+
+Verificação de saúde da API:
+
 ```http
 GET /api/health/ping
 ```
-**Resposta:**
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -292,9 +310,9 @@ GET /api/health/ping
   "data": {
     "status": "Healthy",
     "version": "1.0.0",
-    "uptime": "00:00:00",
+    "uptime": "00:15:42",
     "environment": "Development",
-    "host": "<nome do host>",
+    "host": "localhost",
     "timestampUtc": "2025-11-10T12:50:01.517Z"
   },
   "statusCode": 200,
@@ -304,7 +322,7 @@ GET /api/health/ping
 
 ---
 
-## Equipe de Desenvolvimento
+## 👥 Equipe de Desenvolvimento
 
 <table align="center">
 <tr>
@@ -312,29 +330,23 @@ GET /api/health/ping
 <a href="https://github.com/thejaobiell">
 <img src="https://github.com/thejaobiell.png" width="100px;" alt="João Gabriel"/><br>
 <sub><b>João Gabriel Boaventura</b></sub><br>
-<sub>RM554874 • 2TDSB2025</sub><br>
+<sub>RM554874 • 2TDSB</sub>
 </a>
 </td>
 <td align="center">
 <a href="https://github.com/leomotalima">
 <img src="https://github.com/leomotalima.png" width="100px;" alt="Léo Mota"/><br>
 <sub><b>Léo Mota Lima</b></sub><br>
-<sub>RM557851 • 2TDSB2025</sub><br>
+<sub>RM557851 • 2TDSB</sub>
 </a>
 </td>
 <td align="center">
 <a href="https://github.com/LucasLDC">
 <img src="https://github.com/LucasLDC.png" width="100px;" alt="Lucas Leal"/><br>
 <sub><b>Lucas Leal das Chagas</b></sub><br>
-<sub>RM551124 • 2TDSB2025</sub><br>
+<sub>RM551124 • 2TDSB</sub>
 </a>
 </td>
 </tr>
 </table>
 
----
-
-## Licença
-
-Distribuído sob a licença **MIT**.  
-Consulte [LICENSE](https://choosealicense.com/licenses/mit/).
