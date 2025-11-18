@@ -13,7 +13,7 @@ namespace JobFitScoreAPI.Models
         [Required]
         [Column("nome")]
         [MaxLength(150)]
-        public string Nome { get; set; } = string.Empty;
+        public string NomeCurso { get; set; } = string.Empty;
 
         [Column("instituicao")]
         [MaxLength(150)]
@@ -22,6 +22,13 @@ namespace JobFitScoreAPI.Models
         [Column("carga_horaria")]
         public int? CargaHoraria { get; set; }
 
+        [Column("data_conclusao")]
+        public DateTime? DataConclusao { get; set; }
+
+        [Column("descricao")]
+        [MaxLength(500)]
+        public string? Descricao { get; set; }
+
         [Required]
         [Column("usuario_id")]
         public int UsuarioId { get; set; }
@@ -29,5 +36,9 @@ namespace JobFitScoreAPI.Models
         // Navegação para o usuário
         [ForeignKey("UsuarioId")]
         public Usuario? Usuario { get; set; }
+
+        // Alias legado
+        [NotMapped]
+        public string Nome { get => NomeCurso; set => NomeCurso = value; }
     }
 }

@@ -15,6 +15,24 @@ namespace JobFitScoreAPI.Models
         [MaxLength(100)]
         public string Titulo { get; set; } = string.Empty;
 
+        [Column("descricao")]
+        [MaxLength(500)]
+        public string? Descricao { get; set; }
+
+        [Column("requisitos")]
+        [MaxLength(500)]
+        public string? Requisitos { get; set; }
+
+        [Column("localizacao")]
+        [MaxLength(150)]
+        public string? Localizacao { get; set; }
+
+        [Column("salario")]
+        public decimal? Salario { get; set; }
+
+        [Column("data_publicacao")]
+        public DateTime? DataPublicacao { get; set; }
+
         [Required]
         [Column("empresa_id")]
         public int EmpresaId { get; set; }

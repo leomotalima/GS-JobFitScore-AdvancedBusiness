@@ -10,10 +10,11 @@ namespace JobFitScoreAPI.Models
         [Column("id_empresa")]
         public int IdEmpresa { get; set; }
 
+        // Nome fantasia / razão social
         [Required]
         [Column("nome")]
         [MaxLength(100)]
-        public string Nome { get; set; } = string.Empty;
+        public string NomeEmpresa { get; set; } = string.Empty;
 
         [Required]
         [Column("cnpj")]
@@ -30,6 +31,18 @@ namespace JobFitScoreAPI.Models
         [MaxLength(200)]
         public string Senha { get; set; } = string.Empty;
 
+        [Column("telefone")]
+        [MaxLength(20)]
+        public string? Telefone { get; set; }
+
+        [Column("setor")]
+        [MaxLength(100)]
+        public string? Setor { get; set; }
+
+        [Column("descricao")]
+        [MaxLength(500)]
+        public string? Descricao { get; set; }
+
         [Column("refresh_token")]
         [MaxLength(200)]
         public string? RefreshToken { get; set; }
@@ -39,5 +52,9 @@ namespace JobFitScoreAPI.Models
 
         // Relacionamento 1:N com vagas
         public ICollection<Vaga>? Vagas { get; set; }
+
+        // Alias legado para compatibilidade com controllers que usam Nome
+        [NotMapped]
+        public string Nome { get => NomeEmpresa; set => NomeEmpresa = value; }
     }
 }

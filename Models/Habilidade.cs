@@ -13,6 +13,18 @@ namespace JobFitScoreAPI.Models
         [Required]
         [Column("nome")]
         [MaxLength(100)]
-        public string Nome { get; set; } = string.Empty;
+        public string NomeHabilidade { get; set; } = string.Empty;
+
+        [Column("categoria")]
+        [MaxLength(100)]
+        public string? Categoria { get; set; }
+
+        [Column("descricao")]
+        [MaxLength(500)]
+        public string? Descricao { get; set; }
+
+        // Alias legado
+        [NotMapped]
+        public string Nome { get => NomeHabilidade; set => NomeHabilidade = value; }
     }
 }

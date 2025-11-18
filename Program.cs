@@ -11,6 +11,7 @@ using System.Text.Json;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Services;
 using JobFitScoreAPI.Swagger;
+using JobFitScoreAPI.Repositories;
 using JobFitScoreAPI.Repository;
 using JobFitScoreAPI.Repository.Interfaces;
 using DotNetEnv;
