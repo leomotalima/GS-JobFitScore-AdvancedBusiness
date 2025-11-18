@@ -1,50 +1,24 @@
 BEGIN
-    -- USUÁRIOS
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIOS" ("id_usuario", "nome", "email", "senha")
-                       VALUES (1, ''Admin'', ''admin@jobfitscore.com'', ''admin123'')';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIOS" ("id_usuario", "nome", "email", "senha")
-                       VALUES (2, ''João Silva'', ''joao.silva@gmail.com'', ''senha123'')';
 
-    -- EMPRESAS
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."EMPRESAS" ("id_empresa", "nome", "cnpj", "email", "senha")
-                       VALUES (1, ''TechFlow Ltda'', ''12345678000190'', ''contato@techflow.com'', ''senha123'')';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."EMPRESAS" ("id_empresa", "nome", "cnpj", "email", "senha")
-                       VALUES (2, ''DataMind Solutions'', ''98765432000110'', ''contato@datamind.com'', ''senha123'')';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIOS" ("ID_USUARIO", "NOME", "EMAIL", "SENHA", "REFRESH_TOKEN", "EXPIRA_REFRESH_TOKEN") VALUES (1, ''Admin'', ''admin@jobfitscore.com'', ''$2a$12$5SqXdv5vuwXtJllVDEK//uOmjVQBTZI0VqwiQbiQ/bO2Jcu717Kly'', NULL, NULL)';
 
-    -- HABILIDADES
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."HABILIDADES" ("id_habilidade", "nome") VALUES (1, ''C#'')';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."HABILIDADES" ("id_habilidade", "nome") VALUES (2, ''SQL'')';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."HABILIDADES" ("id_habilidade", "nome") VALUES (3, ''Python'')';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."HABILIDADES" ("id_habilidade", "nome") VALUES (4, ''Power BI'')';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."EMPRESAS" ("ID_EMPRESA", "NOME", "CNPJ", "EMAIL", "SENHA", "REFRESH_TOKEN", "EXPIRA_REFRESH_TOKEN") VALUES (1, ''TechFlow Ltda'', ''12345678000190'', ''contato@techflow.com'', ''$2a$12$5SqXdv5vuwXtJllVDEK//uOmjVQBTZI0VqwiQbiQ/bO2Jcu717Kly'', NULL, NULL)';
 
-    -- VAGAS
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGAS" ("id_vaga", "titulo", "empresa_id") VALUES (1, ''Desenvolvedor Backend'', 1)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGAS" ("id_vaga", "titulo", "empresa_id") VALUES (2, ''Analista de Dados'', 2)';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGAS" ("ID_VAGA", "TITULO", "EMPRESA_ID") VALUES (1, ''Desenvolvedor Backend'', 1)';
 
-    -- CURSOS
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."CURSOS" ("id_curso", "nome", "usuario_id", "instituicao", "carga_horaria")
-                       VALUES (1, ''Introdução a C#'', 1, ''FIAP'', 40)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."CURSOS" ("id_curso", "nome", "usuario_id", "instituicao", "carga_horaria")
-                       VALUES (2, ''SQL Avançado para Análise de Dados'', 1, ''FIAP'', 30)';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."HABILIDADES" ("ID_HABILIDADE", "NOME") VALUES (1, ''C#'')';
 
-    -- CANDIDATURAS
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."CANDIDATURAS" ("id_candidatura", "usuario_id", "vaga_id", "data_candidatura", "status")
-                       VALUES (1, 1, 1, SYSDATE, ''Aprovado'')';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."CANDIDATURAS" ("id_candidatura", "usuario_id", "vaga_id", "data_candidatura", "status")
-                       VALUES (2, 2, 2, SYSDATE, ''Aprovado'')';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIO_HABILIDADE" ("ID_USUARIO_HABILIDADE", "USUARIO_ID", "HABILIDADE_ID") VALUES (1, 1, 1)';
 
-    -- USUARIO_HABILIDADE
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIO_HABILIDADE" ("id_usuario_habilidade", "usuario_id", "habilidade_id") VALUES (1, 1, 1)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIO_HABILIDADE" ("id_usuario_habilidade", "usuario_id", "habilidade_id") VALUES (2, 1, 2)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIO_HABILIDADE" ("id_usuario_habilidade", "usuario_id", "habilidade_id") VALUES (3, 2, 3)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."USUARIO_HABILIDADE" ("id_usuario_habilidade", "usuario_id", "habilidade_id") VALUES (4, 2, 4)';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."CURSOS" ("ID_CURSO", "NOME", "INSTITUICAO", "CARGA_HORARIA", "USUARIO_ID") VALUES (1, ''Introdução a C#'', ''FIAP'', 40, 1)';
 
-    -- VAGA_HABILIDADE
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGA_HABILIDADE" ("id_vaga_habilidade", "vaga_id", "habilidade_id") VALUES (1, 1, 1)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGA_HABILIDADE" ("id_vaga_habilidade", "vaga_id", "habilidade_id") VALUES (2, 1, 2)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGA_HABILIDADE" ("id_vaga_habilidade", "vaga_id", "habilidade_id") VALUES (3, 2, 3)';
-    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGA_HABILIDADE" ("id_vaga_habilidade", "vaga_id", "habilidade_id") VALUES (4, 2, 4)';
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."CANDIDATURAS" ("ID_CANDIDATURA", "USUARIO_ID", "VAGA_ID", "DATA_CANDIDATURA", "STATUS") VALUES (1, 1, 1, SYSDATE, ''Aprovado'')';
+
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."VAGA_HABILIDADE" ("ID_VAGA_HABILIDADE", "VAGA_ID", "HABILIDADE_ID") VALUES (1, 1, 1)';
+
+    EXECUTE IMMEDIATE 'INSERT INTO "' || USER || '"."AUDITORIA_LOG" ("ID_AUDITORIA", "NOME_TABELA", "OPERACAO", "REGISTRO_ID", "DETALHE") VALUES (1, ''USUARIOS'', ''INSERT'', 1, ''Seed inicial de dados para testes'')';
 
     COMMIT;
+
 END;
 /
