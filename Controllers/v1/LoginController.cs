@@ -39,29 +39,36 @@ namespace JobFitScoreAPI.Controllers.v1
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // POST - Autenticação do usuário
+        // ----------------------------------------------------
+        // POST - Autenticação do usuário (LOGIN)
+        // ----------------------------------------------------
         [HttpPost(Name = "Login")]
-        [SwaggerOperation(Summary = "Autentica um usuário", Description = "Valida credenciais e retorna um token JWT.")]
-        [SwaggerResponse(StatusCodes.Status200OK, "Login realizado com sucesso")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Dados inválidos")]
-        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Usuário ou senha inválidos")]
+        [SwaggerOperation(Summary = "Autentica um usuário", Description = "Valida credenciais e retorna um token JWT e Refresh Token.")]
         public async Task<IActionResult> Autenticar([FromBody] UsuarioLoginInput input)
         {
             if (input == null || string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
                 return BadRequest(ApiResponse<string>.Fail("Dados de login inválidos."));
 
             var usuario = await _context.Usuarios
-                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email == input.Email);
 
             if (usuario == null || !BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
                 return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
 
-            var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+            // 🔥 Gera tokens
+            var accessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+
+            // 🔥 Salva Refresh Token no banco
+            usuario.RefreshToken = refreshToken;
+            usuario.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
+
+            await _context.SaveChangesAsync();
 
             var data = new
             {
-                token,
+                access_token = accessToken,
+                refresh_token = refreshToken,
                 usuario = new
                 {
                     id = usuario.IdUsuario,
@@ -72,12 +79,54 @@ namespace JobFitScoreAPI.Controllers.v1
 
             return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso."));
         }
+
+        // ----------------------------------------------------
+        // POST - Refresh Token (RENOVA TOKEN)
+        // ----------------------------------------------------
+        [HttpPost("refresh", Name = "RefreshToken")]
+        [SwaggerOperation(
+            Summary = "Renova o token JWT",
+            Description = "Gera novo access token usando um refresh token válido."
+        )]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenInput input)
+        {
+            if (string.IsNullOrWhiteSpace(input.RefreshToken))
+                return BadRequest(ApiResponse<string>.Fail("Refresh Token inválido."));
+
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.RefreshToken == input.RefreshToken);
+
+            if (usuario == null || usuario.ExpiraRefreshToken < DateTime.UtcNow)
+                return Unauthorized(ApiResponse<string>.Fail("Refresh Token inválido ou expirado."));
+
+            // 🔥 Gera novos tokens
+            var newAccessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+            var newRefreshToken = _jwtService.GenerateRefreshToken();
+
+            usuario.RefreshToken = newRefreshToken;
+            usuario.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
+
+            await _context.SaveChangesAsync();
+
+            var data = new
+            {
+                access_token = newAccessToken,
+                refresh_token = newRefreshToken
+            };
+
+            return Ok(ApiResponse<object>.Ok(data, "Token renovado com sucesso."));
+        }
     }
 
-    // DTO de entrada
+    // DTOs
     public class UsuarioLoginInput
     {
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
+    }
+
+    public class RefreshTokenInput
+    {
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

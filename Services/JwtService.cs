@@ -1,57 +1,49 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace JobFitScoreAPI.Services
 {
     public class JwtService
     {
-        private readonly string _key;
-        private readonly string _issuer;
-        private readonly string _audience;
+        private readonly IConfiguration _config;
 
-        public JwtService(IConfiguration configuration)
+        public JwtService(IConfiguration config)
         {
-            _key = configuration["Jwt:Key"] ?? "default_key_12345";
-            _issuer = configuration["Jwt:Issuer"] ?? "JobFitScore";
-            _audience = configuration["Jwt:Audience"] ?? "JobFitScoreUsers";
+            _config = config;
         }
 
-        // Método original mantido para compatibilidade com v1
-        public string GenerateToken(int userId, string email)
+        // 🔹 Gera Access Token
+        public string GenerateToken(int idUsuario, string email)
         {
-            return GenerateToken(userId, email, "usuario");
-        }
-
-        // Método atualizado com suporte a tipo de usuário
-        public string GenerateToken(int userId, string email, string userType)
-        {
-            var keyBytes = Encoding.UTF8.GetBytes(_key);
-            var credentials = new SigningCredentials(
-                new SymmetricSecurityKey(keyBytes),
-                SecurityAlgorithms.HmacSha256
-            );
-
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, idUsuario.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, userType), // "usuario" ou "empresa"
-                new Claim("user_type", userType) // Claim customizado adicional
+                new Claim("tipo", "USUARIO"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
             var token = new JwtSecurityToken(
-                issuer: _issuer,
-                audience: _audience,
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
-                signingCredentials: credentials
+                expires: DateTime.UtcNow.AddMinutes(30),
+                signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        // 🔹 Gera Refresh Token seguro
+        public string GenerateRefreshToken()
+        {
+            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         }
     }
 }

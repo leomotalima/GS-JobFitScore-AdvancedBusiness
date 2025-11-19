@@ -104,6 +104,7 @@ namespace JobFitScoreAPI.Services
             return false;
         }
 
+        
         public async Task<string> LoginEmpresaAsync(string email, string senha)
         {
             var empresas = await _empresaRepository.GetAllAsync();
@@ -112,7 +113,8 @@ namespace JobFitScoreAPI.Services
             if (empresa == null)
                 throw new UnauthorizedAccessException("Email ou senha inválidos");
 
-            return _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email, "empresa");
+            
+            return _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email);
         }
 
         public async Task<IEnumerable<Empresa>> SearchEmpresasAsync(string? nome, string? setor)
@@ -120,11 +122,12 @@ namespace JobFitScoreAPI.Services
             var empresas = await _empresaRepository.GetAllAsync();
 
             if (!string.IsNullOrWhiteSpace(nome))
-                empresas = empresas.Where(e => e.NomeEmpresa.Contains(nome, StringComparison.OrdinalIgnoreCase));
+                empresas = empresas.Where(e =>
+                    e.NomeEmpresa.Contains(nome, StringComparison.OrdinalIgnoreCase));
 
             if (!string.IsNullOrWhiteSpace(setor))
-                empresas = empresas.Where(e => e.Setor != null && 
-                    e.Setor.Contains(setor, StringComparison.OrdinalIgnoreCase));
+                empresas = empresas.Where(e =>
+                    e.Setor != null && e.Setor.Contains(setor, StringComparison.OrdinalIgnoreCase));
 
             return empresas;
         }

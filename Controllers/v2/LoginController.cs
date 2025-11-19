@@ -25,7 +25,6 @@ namespace JobFitScoreAPI.Controllers.v2
             _context = context;
         }
 
-        // Classe de resposta padronizada
         public class ApiResponse<T>
         {
             public bool Success { get; set; }
@@ -39,20 +38,16 @@ namespace JobFitScoreAPI.Controllers.v2
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // POST - Autenticação automática (usuário ou empresa)
+        // ------------------------------------------
+        // LOGIN AUTOMÁTICO (usuário ou empresa)
+        // ------------------------------------------
         [HttpPost(Name = "LoginV2")]
-        [SwaggerOperation(
-            Summary = "Autentica usuário ou empresa",
-            Description = "Valida credenciais verificando automaticamente nas tabelas de usuários e empresas. Retorna um token JWT com o tipo identificado."
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, "Login realizado com sucesso", typeof(ApiResponse<object>))]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Dados inválidos")]
-        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Email ou senha inválidos")]
         public async Task<IActionResult> Autenticar([FromBody] LoginInput input)
         {
             if (input == null || string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
                 return BadRequest(ApiResponse<string>.Fail("Email e senha são obrigatórios."));
 
+            // TENTA USUÁRIO
             var usuario = await _context.Usuarios
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email == input.Email);
@@ -62,7 +57,7 @@ namespace JobFitScoreAPI.Controllers.v2
                 if (!BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
                     return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
 
-                var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email, "usuario");
+                var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
 
                 var data = new
                 {
@@ -79,6 +74,7 @@ namespace JobFitScoreAPI.Controllers.v2
                 return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso como usuário."));
             }
 
+            // TENTA EMPRESA
             var empresa = await _context.Empresas
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Email == input.Email);
@@ -88,7 +84,7 @@ namespace JobFitScoreAPI.Controllers.v2
                 if (!BCrypt.Net.BCrypt.Verify(input.Senha, empresa.Senha))
                     return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
 
-                var token = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email, "empresa");
+                var token = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email);
 
                 var data = new
                 {
@@ -109,20 +105,13 @@ namespace JobFitScoreAPI.Controllers.v2
             return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
         }
 
-        // POST - Autenticação por tipo específico
+        // ------------------------------------------
+        // LOGIN ESPECÍFICO POR TIPO
+        // ------------------------------------------
         [HttpPost("tipo/{tipo}", Name = "LoginV2ComTipo")]
-        [SwaggerOperation(
-            Summary = "Autentica especificando o tipo",
-            Description = "Permite especificar explicitamente se está autenticando como 'usuario' ou 'empresa'."
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, "Login realizado com sucesso")]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "Tipo ou dados inválidos")]
-        [SwaggerResponse(StatusCodes.Status401Unauthorized, "Email ou senha inválidos")]
-        public async Task<IActionResult> AutenticarPorTipo(
-            [FromRoute] string tipo,
-            [FromBody] LoginInput input)
+        public async Task<IActionResult> AutenticarPorTipo([FromRoute] string tipo, [FromBody] LoginInput input)
         {
-            if (input == null || string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
+            if (string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
                 return BadRequest(ApiResponse<string>.Fail("Email e senha são obrigatórios."));
 
             tipo = tipo.ToLower();
@@ -130,6 +119,7 @@ namespace JobFitScoreAPI.Controllers.v2
             if (tipo != "usuario" && tipo != "empresa")
                 return BadRequest(ApiResponse<string>.Fail("Tipo deve ser 'usuario' ou 'empresa'."));
 
+            // LOGIN USUÁRIO
             if (tipo == "usuario")
             {
                 var usuario = await _context.Usuarios
@@ -139,7 +129,7 @@ namespace JobFitScoreAPI.Controllers.v2
                 if (usuario == null || !BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
                     return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
 
-                var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email, "usuario");
+                var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
 
                 var data = new
                 {
@@ -155,41 +145,37 @@ namespace JobFitScoreAPI.Controllers.v2
 
                 return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso como usuário."));
             }
-            else
+
+            // LOGIN EMPRESA
+            var empresa = await _context.Empresas
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Email == input.Email);
+
+            if (empresa == null || !BCrypt.Net.BCrypt.Verify(input.Senha, empresa.Senha))
+                return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
+
+            var tokenEmpresa = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email);
+
+            var dataEmpresa = new
             {
-                var empresa = await _context.Empresas
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(e => e.Email == input.Email);
-
-                if (empresa == null || !BCrypt.Net.BCrypt.Verify(input.Senha, empresa.Senha))
-                    return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
-
-                var token = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email, "empresa");
-
-                var data = new
+                token = tokenEmpresa,
+                userType = "empresa",
+                empresa = new
                 {
-                    token,
-                    userType = "empresa",
-                    empresa = new
-                    {
-                        id = empresa.IdEmpresa,
-                        email = empresa.Email,
-                        nome = empresa.Nome,
-                        cnpj = empresa.Cnpj
-                    }
-                };
+                    id = empresa.IdEmpresa,
+                    email = empresa.Email,
+                    nome = empresa.Nome,
+                    cnpj = empresa.Cnpj
+                }
+            };
 
-                return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso como empresa."));
-            }
+            return Ok(ApiResponse<object>.Ok(dataEmpresa, "Login realizado com sucesso como empresa."));
         }
     }
 
     public class LoginInput
     {
-        [SwaggerSchema(Description = "Email do usuário ou empresa")]
         public string Email { get; set; } = string.Empty;
-
-        [SwaggerSchema(Description = "Senha")]
         public string Senha { get; set; } = string.Empty;
     }
 }
