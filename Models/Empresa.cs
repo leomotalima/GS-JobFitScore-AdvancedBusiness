@@ -7,47 +7,47 @@ namespace JobFitScoreAPI.Models
     public class Empresa
     {
         [Key]
-        [Column("id_empresa")]
+        [Column("ID_EMPRESA")]
         public int IdEmpresa { get; set; }
 
         // Nome fantasia / razão social
         [Required]
-        [Column("nome")]
+        [Column("NOME")]
         [MaxLength(100)]
         public string NomeEmpresa { get; set; } = string.Empty;
 
         [Required]
-        [Column("cnpj")]
+        [Column("CNPJ")]
         [MaxLength(14)]
         public string Cnpj { get; set; } = string.Empty;
 
         [Required]
-        [Column("email")]
+        [Column("EMAIL")]
         [MaxLength(100)]
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [Column("senha")]
+        [Column("SENHA")]
         [MaxLength(200)]
         public string Senha { get; set; } = string.Empty;
 
-        [Column("telefone")]
+        [Column("TELEFONE")]
         [MaxLength(20)]
         public string? Telefone { get; set; }
 
-        [Column("setor")]
+        [Column("SETOR")]
         [MaxLength(100)]
         public string? Setor { get; set; }
 
-        [Column("descricao")]
+        [Column("DESCRICAO")]
         [MaxLength(500)]
         public string? Descricao { get; set; }
 
-        [Column("refresh_token")]
+        [Column("REFRESH_TOKEN")]
         [MaxLength(200)]
         public string? RefreshToken { get; set; }
 
-        [Column("expira_refresh_token")]
+        [Column("EXPIRA_REFRESH_TOKEN")]
         public DateTime? ExpiraRefreshToken { get; set; }
 
         // Relacionamento 1:N com vagas

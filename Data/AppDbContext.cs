@@ -64,14 +64,7 @@ namespace JobFitScoreAPI.Data
                 .HasForeignKey(c => c.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            foreach (var entity in modelBuilder.Model.GetEntityTypes())
-            {
-                var tableName = entity.GetTableName();
-                if (!string.IsNullOrEmpty(tableName))
-                {
-                    entity.SetTableName(tableName.ToUpper());
-                }
-            }
+            
         }
     }
 }

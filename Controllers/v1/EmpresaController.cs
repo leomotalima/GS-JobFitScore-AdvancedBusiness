@@ -11,7 +11,8 @@ namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/empresa")]
+    // ROTA CORRIGIDA PARA O PLURAL 'empresas'
+    [Route("api/v{version:apiVersion}/empresas")] 
     [Tags("Empresas")]
     [Produces("application/json")]
     [Consumes("application/json")]
@@ -54,7 +55,7 @@ namespace JobFitScoreAPI.Controllers.v1
             var totalItems = await _context.Empresas.CountAsync();
 
             var empresas = await _context.Empresas
-                .OrderBy(e => e.Nome)
+                .OrderBy(e => e.NomeEmpresa) 
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(e => new EmpresaOutput
@@ -194,6 +195,7 @@ namespace JobFitScoreAPI.Controllers.v1
         }
 
         // MÉTODOS AUXILIARES HATEOAS
+        // Usam 'Empresa' como nome da controller (singular)
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetEmpresa), "Empresa", new { id }) ?? string.Empty;
 

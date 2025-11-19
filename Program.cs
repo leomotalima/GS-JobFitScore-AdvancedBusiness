@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using JobFitScoreAPI;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -293,6 +294,3 @@ app.MapControllers();
 // Run
 // ----------------------
 app.Run();
-
-// Necessário para testes de integração
-public partial class Program { }
