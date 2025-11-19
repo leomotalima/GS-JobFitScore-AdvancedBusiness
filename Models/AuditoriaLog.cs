@@ -4,32 +4,32 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobFitScoreAPI.Models
 {
-    [Table("auditoria_log")]
+    [Table("AUDITORIA_LOG")]
     public class AuditoriaLog
     {
         [Key]
-        [Column("id_auditoria")]
+        [Column("ID_AUDITORIA")]
         public int IdAuditoria { get; set; }
 
         [Required]
-        [Column("nome_tabela")]
+        [Column("NOME_TABELA")]
         public string NomeTabela { get; set; } = string.Empty;
 
         [Required]
-        [Column("operacao")]
+        [Column("OPERACAO")]
         public string Operacao { get; set; } = string.Empty;
 
-        [Column("registro_id")]
+        [Column("REGISTRO_ID")]
         public int? RegistroId { get; set; }
 
-        [Column("usuario_banco")]
+        [Column("USUARIO_BANCO")]
         public string? UsuarioBanco { get; set; }
 
         [Required]
-        [Column("data_operacao")]
+        [Column("DATA_OPERACAO")]
         public DateTime DataOperacao { get; set; }
 
-        [Column("detalhe")]
+        [Column("DETALHE")]
         public string? Detalhe { get; set; }
     }
 }

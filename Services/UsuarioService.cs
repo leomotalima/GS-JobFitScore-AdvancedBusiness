@@ -23,7 +23,7 @@ namespace JobFitScoreAPI.Services
             _cryptoService = cryptoService;
         }
 
-        // 🔹 LOGIN retorna AccessToken + RefreshToken
+        // LOGIN retorna AccessToken + RefreshToken
         public async Task<(string AccessToken, string RefreshToken)> LoginAsync(string email, string senha)
         {
             var usuarios = await _usuarioRepository.GetAllAsync();
@@ -35,11 +35,11 @@ namespace JobFitScoreAPI.Services
             if (!_cryptoService.VerifyPassword(senha, usuario.Senha))
                 throw new Exception("Usuário ou senha inválidos.");
 
-            // 🔸 Gerar tokens
+            // Gerar tokens
             string accessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
             string refreshToken = _jwtService.GenerateRefreshToken();
 
-            // 🔸 Salvar refresh token
+            // Salvar refresh token
             usuario.RefreshToken = refreshToken;
             usuario.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
 
@@ -49,7 +49,7 @@ namespace JobFitScoreAPI.Services
             return (accessToken, refreshToken);
         }
 
-        // 🔹 RENOVA O TOKEN
+        // RENOVA O TOKEN
         public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(string refreshToken)
         {
             var usuarios = await _usuarioRepository.GetAllAsync();

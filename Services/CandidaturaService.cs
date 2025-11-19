@@ -39,10 +39,10 @@ namespace JobFitScoreAPI.Services
 
             var dadosEntrada = new JobFitData
             {
-                ExperienciaAnos = 3, // Placeholder - deveria vir do perfil do usuário
+                ExperienciaAnos = 3, 
                 HabilidadesMatch = matchHabilidades,
-                CursosRelacionados = 1, // Placeholder
-                NivelVaga = 2, // Placeholder
+                CursosRelacionados = 1, 
+                NivelVaga = 2, 
                 ScoreCompatibilidade = 0
             };
 

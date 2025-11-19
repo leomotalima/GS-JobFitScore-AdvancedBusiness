@@ -4,33 +4,33 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobFitScoreAPI.Models
 {
-    [Table("candidaturas")]
+    [Table("CANDIDATURAS")]
     public class Candidatura
     {
         [Key]
-        [Column("id_candidatura")]
+        [Column("ID_CANDIDATURA")]
         public int IdCandidatura { get; set; }
 
         [Required]
-        [Column("usuario_id")]
+        [Column("USUARIO_ID")]
         public int UsuarioId { get; set; }
 
         [Required]
-        [Column("vaga_id")]
+        [Column("VAGA_ID")]
         public int VagaId { get; set; }
 
-        [Column("data_candidatura")]
-        public DateTime DataCandidatura { get; set; } = DateTime.Now; // Alinha com DEFAULT sysdate
+        [Column("DATA_CANDIDATURA")]
+        public DateTime DataCandidatura { get; set; } = DateTime.Now; 
 
-        [Column("status")]
+        [Column("STATUS")]
         [MaxLength(50)]
-        public string Status { get; set; } = "Em Análise"; // Valor padrão alinhado com o CHECK
+        public string Status { get; set; } = "Em Análise"; 
 
         // Navegação
-        [ForeignKey("UsuarioId")]
+        [ForeignKey("USUARIOID")]
         public Usuario? Usuario { get; set; }
 
-        [ForeignKey("VagaId")]
+        [ForeignKey("VAGAID")]
         public Vaga? Vaga { get; set; }
     }
 }

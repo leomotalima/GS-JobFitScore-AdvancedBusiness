@@ -3,24 +3,24 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobFitScoreAPI.Models
 {
-    [Table("vaga_habilidade")]
+    [Table("VAGA_HABILIDADE")]
     public class VagaHabilidade
     {
         [Key]
-        [Column("id_vaga_habilidade")]
+        [Column("ID_VAGA_HABILIDADE")]
         public int IdVagaHabilidade { get; set; }
 
-        [Column("vaga_id")]
+        [Column("VAGA_ID")]
         public int VagaId { get; set; }
 
-        [Column("habilidade_id")]
+        [Column("HABILIDADE_ID")]
         public int HabilidadeId { get; set; }
 
         // Navegação
-        [ForeignKey("VagaId")]
+        [ForeignKey("VAGAID")]
         public Vaga? Vaga { get; set; }
 
-        [ForeignKey("HabilidadeId")]
+        [ForeignKey("HABILIDADEID")]
         public Habilidade? Habilidade { get; set; }
     }
 }

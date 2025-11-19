@@ -7,38 +7,38 @@ namespace JobFitScoreAPI.Models
     public class Vaga
     {
         [Key]
-        [Column("id_vaga")]
+        [Column("ID_VAGA")]
         public int IdVaga { get; set; }
 
         [Required]
-        [Column("titulo")]
+        [Column("TITULO")]
         [MaxLength(100)]
         public string Titulo { get; set; } = string.Empty;
 
-        [Column("descricao")]
+        [Column("DESCRICAO")]
         [MaxLength(500)]
         public string? Descricao { get; set; }
 
-        [Column("requisitos")]
+        [Column("REQUISITOS")]
         [MaxLength(500)]
         public string? Requisitos { get; set; }
 
-        [Column("localizacao")]
+        [Column("LOCALIZACAO")]
         [MaxLength(150)]
         public string? Localizacao { get; set; }
 
-        [Column("salario")]
+        [Column("SALARIO")]
         public decimal? Salario { get; set; }
 
-        [Column("data_publicacao")]
+        [Column("DATA_PUBLICACAO")]
         public DateTime? DataPublicacao { get; set; }
 
         [Required]
-        [Column("empresa_id")]
+        [Column("EMPRESA_ID")]
         public int EmpresaId { get; set; }
 
         // Navegação para empresa
-        [ForeignKey("EmpresaId")]
+        [ForeignKey("EMPRESAID")]
         public Empresa? Empresa { get; set; }
     }
 }

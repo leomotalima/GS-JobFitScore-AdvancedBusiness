@@ -15,7 +15,7 @@ namespace JobFitScoreAPI.Services
             _config = config;
         }
 
-        // 🔹 Gera Access Token
+        // Gera Access Token
         public string GenerateToken(int idUsuario, string email)
         {
             var claims = new[]
@@ -40,7 +40,7 @@ namespace JobFitScoreAPI.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        // 🔹 Gera Refresh Token seguro
+        // Gera Refresh Token seguro
         public string GenerateRefreshToken()
         {
             return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));

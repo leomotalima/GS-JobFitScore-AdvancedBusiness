@@ -3,23 +3,23 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace JobFitScoreAPI.Models
 {
-    [Table("habilidades")]
+    [Table("HABILIDADES")]
     public class Habilidade
     {
         [Key]
-        [Column("id_habilidade")]
+        [Column("ID_HABILIDADE")]
         public int IdHabilidade { get; set; }
 
         [Required]
-        [Column("nome")]
+        [Column("NOME")]
         [MaxLength(100)]
         public string NomeHabilidade { get; set; } = string.Empty;
 
-        [Column("categoria")]
+        [Column("CATEGORIA")]
         [MaxLength(100)]
         public string? Categoria { get; set; }
 
-        [Column("descricao")]
+        [Column("DESCRICAO")]
         [MaxLength(500)]
         public string? Descricao { get; set; }
 

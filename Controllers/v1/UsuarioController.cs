@@ -11,7 +11,7 @@ namespace JobFitScoreAPI.Controllers.v1
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/usuarios")] // Rota corrigida para plural
+    [Route("api/v{version:apiVersion}/usuarios")] 
     [Tags("Usuários")]
     [Produces("application/json")]
     [Consumes("application/json")]
