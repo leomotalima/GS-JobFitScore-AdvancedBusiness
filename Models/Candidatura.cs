@@ -26,11 +26,11 @@ namespace JobFitScoreAPI.Models
         [MaxLength(50)]
         public string Status { get; set; } = "Em Análise"; 
 
-        // Navegação
-        [ForeignKey("USUARIOID")]
+        
+        [ForeignKey(nameof(UsuarioId))]
         public Usuario? Usuario { get; set; }
 
-        [ForeignKey("VAGAID")]
+        [ForeignKey(nameof(VagaId))]
         public Vaga? Vaga { get; set; }
     }
 }
