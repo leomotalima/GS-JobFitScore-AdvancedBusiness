@@ -28,7 +28,7 @@ namespace JobFitScoreAPI.Services
             if (curso == null)
                 throw new ArgumentNullException(nameof(curso));
 
-            if (string.IsNullOrWhiteSpace(curso.NomeCurso))
+            if (string.IsNullOrWhiteSpace(curso.Nome))
                 throw new ArgumentException("Nome do curso é obrigatório");
 
             if (curso.UsuarioId <= 0)
@@ -53,8 +53,8 @@ namespace JobFitScoreAPI.Services
             if (cursoExistente == null)
                 return null;
 
-            if (!string.IsNullOrWhiteSpace(curso.NomeCurso))
-                cursoExistente.NomeCurso = curso.NomeCurso;
+            if (!string.IsNullOrWhiteSpace(curso.Nome))
+                cursoExistente.Nome = curso.Nome;
 
             if (!string.IsNullOrWhiteSpace(curso.Instituicao))
                 cursoExistente.Instituicao = curso.Instituicao;
@@ -95,7 +95,7 @@ namespace JobFitScoreAPI.Services
             var query = _context.Cursos.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(nome))
-                query = query.Where(c => c.NomeCurso.Contains(nome));
+                query = query.Where(c => c.Nome.Contains(nome));
 
             if (!string.IsNullOrWhiteSpace(instituicao))
                 query = query.Where(c => c.Instituicao != null && c.Instituicao.Contains(instituicao));

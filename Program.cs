@@ -132,13 +132,31 @@ builder.Services.AddSwaggerGen(opt =>
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "JobFitScore API", Version = "v1" });
     opt.SwaggerDoc("v2", new OpenApiInfo { Title = "JobFitScore API", Version = "v2" });
 
+    // Definição do esquema de autenticação Bearer
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT desta forma: Bearer {token}"
+    });
+
+    // Faz o Swagger enviar o token para todos os endpoints [Authorize]
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference 
+                { 
+                    Type = ReferenceType.SecurityScheme, 
+                    Id = "Bearer" 
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 
     opt.OperationFilter<SwaggerSecurityRequirementsFilter>();
