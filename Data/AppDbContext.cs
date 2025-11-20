@@ -15,7 +15,6 @@ namespace JobFitScoreAPI.Data
         public DbSet<Curso> Cursos { get; set; } = null!;
         public DbSet<Candidatura> Candidaturas { get; set; } = null!;
         public DbSet<VagaHabilidade> VagaHabilidades { get; set; } = null!;
-        public DbSet<AuditoriaLog> AuditoriaLogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,12 +26,6 @@ namespace JobFitScoreAPI.Data
                 .UseHiLo("SEQ_HABILIDADES", "RM557851"); 
             // =================================================================================
 
-            
-            modelBuilder.Entity<Vaga>()
-                .Property(v => v.Salario)
-                .HasPrecision(18, 2); 
-            // ===================================================================
-
             modelBuilder.Entity<Usuario>().ToTable("USUARIOS");
             modelBuilder.Entity<Empresa>().ToTable("EMPRESAS");
             modelBuilder.Entity<Vaga>().ToTable("VAGAS");
@@ -41,9 +34,6 @@ namespace JobFitScoreAPI.Data
             modelBuilder.Entity<Curso>().ToTable("CURSOS");
             modelBuilder.Entity<Candidatura>().ToTable("CANDIDATURAS");
             modelBuilder.Entity<VagaHabilidade>().ToTable("VAGA_HABILIDADE");
-            modelBuilder.Entity<AuditoriaLog>().ToTable("AUDITORIA_LOG");
-
-            modelBuilder.Entity<AuditoriaLog>().HasKey(a => a.IdAuditoria);
 
             modelBuilder.Entity<UsuarioHabilidade>()
                 .HasKey(uh => new { uh.UsuarioId, uh.HabilidadeId });

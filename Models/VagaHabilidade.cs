@@ -7,16 +7,15 @@ namespace JobFitScoreAPI.Models
     public class VagaHabilidade
     {
         [Key]
-        [Column("ID_VAGA_HABILIDADE")]
+        [Column("id_vaga_habilidade")]
         public int IdVagaHabilidade { get; set; }
 
-        [Column("VAGA_ID")]
+        [Column("vaga_id")]
         public int VagaId { get; set; }
 
-        [Column("HABILIDADE_ID")]
+        [Column("habilidade_id")]
         public int HabilidadeId { get; set; }
 
-        // Navegação
         public Vaga? Vaga { get; set; }
 
         public Habilidade? Habilidade { get; set; }

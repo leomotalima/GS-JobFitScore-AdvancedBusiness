@@ -8,29 +8,29 @@ namespace JobFitScoreAPI.Models
     public class Usuario
     {
         [Key]
-        [Column("ID_USUARIO")]
+        [Column("id_usuario")]
         public int IdUsuario { get; set; }
 
         [Required]
-        [Column("NOME")]
+        [Column("nome")]
         [MaxLength(100)]
         public string Nome { get; set; } = string.Empty;
 
         [Required]
-        [Column("EMAIL")]
+        [Column("email")]
         [MaxLength(100)]
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [Column("SENHA")]
+        [Column("senha")]
         [MaxLength(200)]
         public string Senha { get; set; } = string.Empty;
 
-        [Column("REFRESH_TOKEN")]
+        [Column("refresh_token")]
         [MaxLength(200)]
         public string? RefreshToken { get; set; }
 
-        [Column("EXPIRA_REFRESH_TOKEN")]
+        [Column("expira_refresh_token")]
         public DateTime? ExpiraRefreshToken { get; set; }
     }
 }

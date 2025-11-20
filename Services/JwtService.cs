@@ -1,49 +1,53 @@
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Security.Cryptography;
 
 namespace JobFitScoreAPI.Services
 {
     public class JwtService
     {
-        private readonly IConfiguration _config;
+        private readonly string _key;
+        private readonly string _issuer;
+        private readonly string _audience;
+        private readonly int _expireMinutes;
 
-        public JwtService(IConfiguration config)
+        public JwtService(string key, string issuer, string audience, int expireMinutes = 120)
         {
-            _config = config;
+            _key = key;
+            _issuer = issuer;
+            _audience = audience;
+            _expireMinutes = expireMinutes;
         }
 
-        // Gera Access Token
-        public string GenerateToken(int idUsuario, string email)
+        public string GenerateToken(int id, string email, string tipo)
         {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, idUsuario.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim("tipo", "USUARIO"),
+                new Claim("tipo", tipo),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
+                issuer: _issuer,
+                audience: _audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(120),
+                expires: DateTime.UtcNow.AddMinutes(_expireMinutes),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        // Gera Refresh Token seguro
         public string GenerateRefreshToken()
         {
-            return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
         }
     }
 }

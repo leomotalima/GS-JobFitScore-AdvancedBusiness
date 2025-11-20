@@ -8,30 +8,30 @@ namespace JobFitScoreAPI.Models
     public class Curso
     {
         [Key]
-        [Column("ID_CURSO")]
+        [Column("id_curso")]
         public int IdCurso { get; set; }
 
         [Required]
-        [Column("NOME")]
+        [Column("nome")]
         [MaxLength(150)]
         public string Nome { get; set; } = string.Empty;
 
-        [Column("INSTITUICAO")]
+        [Column("instituicao")]
         [MaxLength(150)]
         public string? Instituicao { get; set; }
 
-        [Column("CARGA_HORARIA")]
+        [Column("carga_horaria")]
         public int? CargaHoraria { get; set; }
 
-        [Column("DATA_CONCLUSAO")]
+        [Column("data_conclusao")]
         public DateTime? DataConclusao { get; set; }
 
-        [Column("DESCRICAO")]
+        [Column("descricao")]
         [MaxLength(500)]
         public string? Descricao { get; set; }
 
         [Required]
-        [Column("USUARIO_ID")]
+        [Column("usuario_id")]
         public int UsuarioId { get; set; }
 
         

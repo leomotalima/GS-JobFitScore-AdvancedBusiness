@@ -34,17 +34,12 @@ namespace JobFitScoreAPI.Services
             if (string.IsNullOrWhiteSpace(vaga.Titulo))
                 throw new ArgumentException("Título da vaga é obrigatório");
 
-            if (string.IsNullOrWhiteSpace(vaga.Descricao))
-                throw new ArgumentException("Descrição da vaga é obrigatória");
-
             if (vaga.EmpresaId <= 0)
                 throw new ArgumentException("EmpresaId é obrigatório");
 
             var empresa = await _context.Empresas.FindAsync(vaga.EmpresaId);
             if (empresa == null)
                 throw new InvalidOperationException("Empresa não encontrada");
-
-            vaga.DataPublicacao = DateTime.Now;
 
             await _vagaRepository.AddAsync(vaga);
             await _vagaRepository.SaveChangesAsync();
@@ -63,18 +58,6 @@ namespace JobFitScoreAPI.Services
 
             if (!string.IsNullOrWhiteSpace(vaga.Titulo))
                 vagaExistente.Titulo = vaga.Titulo;
-
-            if (!string.IsNullOrWhiteSpace(vaga.Descricao))
-                vagaExistente.Descricao = vaga.Descricao;
-
-            if (!string.IsNullOrWhiteSpace(vaga.Requisitos))
-                vagaExistente.Requisitos = vaga.Requisitos;
-
-            if (!string.IsNullOrWhiteSpace(vaga.Localizacao))
-                vagaExistente.Localizacao = vaga.Localizacao;
-
-            if (vaga.Salario.HasValue)
-                vagaExistente.Salario = vaga.Salario;
 
             _vagaRepository.Update(vagaExistente);
             await _vagaRepository.SaveChangesAsync();
@@ -98,19 +81,12 @@ namespace JobFitScoreAPI.Services
             return vagas.Where(v => v.EmpresaId == empresaId);
         }
 
-        public async Task<IEnumerable<Vaga>> SearchVagasAsync(string? titulo, string? localizacao, decimal? salarioMinimo)
+        public async Task<IEnumerable<Vaga>> SearchVagasAsync(string? titulo)
         {
             var vagas = await _vagaRepository.GetAllAsync();
 
             if (!string.IsNullOrWhiteSpace(titulo))
                 vagas = vagas.Where(v => v.Titulo.Contains(titulo, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(localizacao))
-                vagas = vagas.Where(v => v.Localizacao != null && 
-                    v.Localizacao.Contains(localizacao, StringComparison.OrdinalIgnoreCase));
-
-            if (salarioMinimo.HasValue)
-                vagas = vagas.Where(v => v.Salario.HasValue && v.Salario >= salarioMinimo);
 
             return vagas;
         }

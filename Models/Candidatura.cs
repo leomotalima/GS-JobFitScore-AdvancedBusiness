@@ -8,21 +8,21 @@ namespace JobFitScoreAPI.Models
     public class Candidatura
     {
         [Key]
-        [Column("ID_CANDIDATURA")]
+        [Column("id_candidatura")]
         public int IdCandidatura { get; set; }
 
         [Required]
-        [Column("USUARIO_ID")]
+        [Column("usuario_id")]
         public int UsuarioId { get; set; }
 
         [Required]
-        [Column("VAGA_ID")]
+        [Column("vaga_id")]
         public int VagaId { get; set; }
 
-        [Column("DATA_CANDIDATURA")]
+        [Column("data_candidatura")]
         public DateTime DataCandidatura { get; set; } = DateTime.Now; 
 
-        [Column("STATUS")]
+        [Column("status")]
         [MaxLength(50)]
         public string Status { get; set; } = "Em Análise"; 
 

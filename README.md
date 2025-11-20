@@ -30,7 +30,6 @@ utilizando análise de habilidades e requisitos com base em técnicas de <b>inte
   <img src="https://img.shields.io/badge/FIAP-ED145B?style=for-the-badge"/>
 </p>
 
-
 ---
 
 ## Arquitetura do Sistema
@@ -154,7 +153,7 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
   "success": true,
   "message": "Score de compatibilidade calculado com sucesso",
   "data": {
-    "usuario": "João Gabriel Boaventura",
+    "usuario": "Fulano da Silva Machado",
     "vaga": "Analista de Sistemas",
     "score": 76,
     "recomendacoes": [
@@ -224,7 +223,7 @@ Execute os seguintes comandos no terminal:
 
 ```bash
 # Instalar Entity Framework CLI globalmente (se ainda não tiver)
-dotnet tool install --global dotnet-ef
+dotnet tool install --global dotnet-ef --version 8.0
 
 # Restaurar pacotes NuGet
 dotnet restore
@@ -234,16 +233,39 @@ dotnet build
 
 # Aplicar migrations no banco de dados
 dotnet ef database update
+```
 
 ---
 
-### 4️⃣ Executar a aplicação
+### 4️⃣ Popular o banco de dados com dados iniciais
 
-Volte para a raiz do projeto (se estiver na pasta Scripts):
+Após aplicar as migrations, execute o script SQL para inserir os dados iniciais:
 
-```bash
-cd ..
-```
+**Opção 1: Usando Oracle SQL Developer para VSCode**
+
+1. Instale a extensão [Oracle SQL Developer](https://marketplace.visualstudio.com/items?itemName=Oracle.sql-developer) no VSCode
+
+2. Configure uma conexão com seu banco Oracle:
+   - Abra o painel lateral do Oracle SQL Developer no VSCode
+   - Clique em "Create Connection"
+   - Preencha os dados de conexão (user, password, host, port, service)
+
+3. Abra o arquivo `Scripts/inserts.sql` no VSCode
+
+4. Execute o script:
+   - Clique com botão direito no editor → "Execute SQL"
+   - Ou use o atalho `Ctrl+Enter` (Linux/Windows) / `Cmd+Enter` (Mac)
+
+**Opção 2: Usando Oracle SQL Developer Desktop**
+
+1. Abra o Oracle SQL Developer
+2. Conecte-se ao banco de dados
+3. Abra o arquivo `Scripts/inserts.sql`
+4. Execute o script clicando no botão "Run Script" (F5)
+
+---
+
+### 5️⃣ Executar a aplicação
 
 Execute a aplicação:
 
@@ -259,20 +281,44 @@ A API estará disponível em: ** [http://localhost:5142/swagger/index.html](http
 ## Estrutura do Projeto
 
 ```
-JobFitScore/
-├── Controllers/           # Endpoints da API
-├── Data/                 # DbContext e configurações EF
-├── DTOs/                 # Data Transfer Objects
-├── Hateoas/              # Implementação HATEOAS
-├── Models/               # Entidades do domínio
-├── Repositories/         # Acesso a dados
-├── Services/             # Lógica de negócio
-├── Swagger/              # Configurações Swagger
-├── Scripts/              # Scripts SQL (inserts.sql)
-├── JobFitScore.Tests/    # Testes automatizados
-├── Program.cs            # Ponto de entrada da aplicação
-├── .env                  # Variáveis de ambiente (criar manualmente)
-└── README.md
+├── AppDbContextFactory.cs
+├── appsettings.Development.json
+├── appsettings.json
+├── Controllers
+│   ├── v1
+│   └── v2
+│
+├── Data
+│   └── AppDbContext.cs
+├── Dtos
+├── JobFitScoreAPI.csproj
+├── JobFitScore.Tests
+│   ├── appsettings.Testing.json
+│   ├── CustomWebApplicationFactory.cs
+│   ├── Integration
+│   │   ├── HealthCheckTests.cs
+│   │   ├── LoginIntegrationTests.cs
+│   │   ├── TestAuthHandler.cs
+│   │   └── UsuarioControllerIntegrationTests.cs
+│   ├── JobFitScore.Tests.csproj
+│   └── Unit
+├── Migrations
+├── Models
+├── Program.cs
+├── Properties
+│   └── launchSettings.json
+├── README.md
+├── Repositories
+├── Scripts
+│   ├── inserts.sql
+│   ├── ml_jobfitscore.csv
+│   └── remover-todas-tabelas.sql
+├── Services
+├── Static
+│   └── images
+│       └── logo.png
+└── Swagger
+    └── SwaggerFilters.cs
 ```
 
 ---
@@ -298,6 +344,21 @@ GET /api/health/ping
   "timestampUtc": "2025-11-10T12:50:01.517Z"
 }
 ```
+---
+
+## Testes Automatizados
+
+![Tests](https://img.shields.io/badge/Testes%20de%20Integração-100%25%20Aprovados-brightgreen.svg)
+![Build](https://img.shields.io/badge/Build-Sucesso-blue.svg)
+
+**Executando os testes manualmente:**
+```bash
+cd JobFitScore/JobFitScore.Tests
+dotnet clean
+dotnet build
+dotnet test
+```
+> Todos os testes rodam com banco **InMemory**, sem necessidade do Oracle local.
 
 ---
 
@@ -328,10 +389,3 @@ GET /api/health/ping
 </td>
 </tr>
 </table>
-
----
-
-## Licença
-
-Distribuído sob a licença **MIT**.  
-Consulte [LICENSE](https://choosealicense.com/licenses/mit/).

@@ -7,23 +7,22 @@ namespace JobFitScoreAPI.Models
     public class Habilidade
     {
         [Key]
-        [Column("ID_HABILIDADE")]
+        [Column("id_habilidade")]
         public int IdHabilidade { get; set; }
 
         [Required]
-        [Column("NOME")]
+        [Column("nome")]
         [MaxLength(100)]
         public string NomeHabilidade { get; set; } = string.Empty;
 
-        [Column("CATEGORIA")]
+        [Column("categoria")]
         [MaxLength(100)]
         public string? Categoria { get; set; }
 
-        [Column("DESCRICAO")]
+        [Column("descricao")]
         [MaxLength(500)]
         public string? Descricao { get; set; }
 
-        // Alias legado
         [NotMapped]
         public string Nome { get => NomeHabilidade; set => NomeHabilidade = value; }
     }

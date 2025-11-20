@@ -36,7 +36,7 @@ namespace JobFitScoreAPI.Services
                 throw new Exception("Usuário ou senha inválidos.");
 
             // Gerar tokens
-            string accessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+            string accessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email, "usuario");
             string refreshToken = _jwtService.GenerateRefreshToken();
 
             // Salvar refresh token
@@ -58,7 +58,7 @@ namespace JobFitScoreAPI.Services
             if (usuario == null || usuario.ExpiraRefreshToken < DateTime.UtcNow)
                 throw new Exception("Refresh Token inválido ou expirado.");
 
-            string newAccessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+            string newAccessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email, "usuario");
             string newRefreshToken = _jwtService.GenerateRefreshToken();
 
             usuario.RefreshToken = newRefreshToken;

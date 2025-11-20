@@ -75,7 +75,6 @@ builder.Services.AddScoped<EmpresaService>();
 builder.Services.AddScoped<HabilidadeService>();
 builder.Services.AddScoped<UsuarioHabilidadeService>();
 builder.Services.AddScoped<VagaHabilidadeService>();
-builder.Services.AddScoped<AuditoriaLogService>();
 builder.Services.AddScoped<CursoService>();
 
 // ----------------------
@@ -108,8 +107,18 @@ var key = Encoding.UTF8.GetBytes(
         : builder.Configuration["Jwt:Key"] ?? "default_key_12345"
 );
 
-builder.Services.AddSingleton<JwtService>();
+var jwtKey = builder.Configuration["Jwt:Key"] 
+             ?? "ChaveSuperUltraMegaSeguraComMaisDe32Caracteres_123456";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "JobFitScore";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobFitScoreUsers";
+var jwtExpireMinutes = 120;
 
+builder.Services.AddSingleton(sp => new JwtService(
+    jwtKey,
+    jwtIssuer,
+    jwtAudience,
+    jwtExpireMinutes
+));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
     {
@@ -312,3 +321,5 @@ app.MapControllers();
 // Run
 // ----------------------
 app.Run();
+
+public partial class Program { }

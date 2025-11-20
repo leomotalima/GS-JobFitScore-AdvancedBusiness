@@ -5,13 +5,15 @@ using JobFitScoreAPI.Models;
 using JobFitScoreAPI.Services;
 using Asp.Versioning;
 using Swashbuckle.AspNetCore.Annotations;
+using System;
+using System.Threading.Tasks;
 
 namespace JobFitScoreAPI.Controllers.v2
 {
     [ApiController]
     [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}/login")]
-    [Tags("Autenticação v2")]
+    [Tags("Autenticação")]
     [Produces("application/json")]
     [Consumes("application/json")]
     public class LoginController : ControllerBase
@@ -38,144 +40,133 @@ namespace JobFitScoreAPI.Controllers.v2
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // ------------------------------------------
-        // LOGIN AUTOMÁTICO (usuário ou empresa)
-        // ------------------------------------------
-        [HttpPost(Name = "LoginV2")]
-        public async Task<IActionResult> Autenticar([FromBody] LoginInput input)
+        [HttpPost(Name = "Login")]
+        [SwaggerOperation(Summary = "Autentica um usuário ou empresa", Description = "Valida credenciais e retorna um token JWT e Refresh Token.")]
+        public async Task<IActionResult> Autenticar([FromBody] UsuarioLoginInput input)
         {
             if (input == null || string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
-                return BadRequest(ApiResponse<string>.Fail("Email e senha são obrigatórios."));
+                return BadRequest(ApiResponse<string>.Fail("Dados de login inválidos."));
 
-            // TENTA USUÁRIO
-            var usuario = await _context.Usuarios
-                .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Email == input.Email);
+            var email = input.Email.Trim().ToLower();
 
+            // Tenta encontrar usuário
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+
+            // Tenta encontrar empresa se não for usuário
+            var empresa = usuario == null ? await _context.Empresas.FirstOrDefaultAsync(e => e.Email.ToLower() == email) : null;
+
+            if (usuario == null && empresa == null)
+                return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
+
+            // Login de usuário
             if (usuario != null)
             {
                 if (!BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
-                    return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
+                    return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
 
-                var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+                var accessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email, "usuario");
+                var refreshToken = _jwtService.GenerateRefreshToken();
+
+                usuario.RefreshToken = refreshToken;
+                usuario.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
+                await _context.SaveChangesAsync();
 
                 var data = new
                 {
-                    token,
-                    userType = "usuario",
-                    user = new
-                    {
-                        id = usuario.IdUsuario,
-                        email = usuario.Email,
-                        nome = usuario.Nome
-                    }
+                    access_token = accessToken,
+                    refresh_token = refreshToken,
+                    tipo = "usuario",
+                    usuario = new { id = usuario.IdUsuario, email = usuario.Email, nome = usuario.Nome }
                 };
 
-                return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso como usuário."));
+                return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso."));
             }
 
-            // TENTA EMPRESA
-            var empresa = await _context.Empresas
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Email == input.Email);
-
+            // Login de empresa
             if (empresa != null)
             {
                 if (!BCrypt.Net.BCrypt.Verify(input.Senha, empresa.Senha))
-                    return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
+                    return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
 
-                var token = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email);
+                var accessTokenE = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email, "empresa");
+                var refreshTokenE = _jwtService.GenerateRefreshToken();
 
-                var data = new
+                empresa.RefreshToken = refreshTokenE;
+                empresa.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
+                await _context.SaveChangesAsync();
+
+                var dataEmpresa = new
                 {
-                    token,
-                    userType = "empresa",
-                    empresa = new
-                    {
-                        id = empresa.IdEmpresa,
-                        email = empresa.Email,
-                        nome = empresa.Nome,
-                        cnpj = empresa.Cnpj
-                    }
+                    access_token = accessTokenE,
+                    refresh_token = refreshTokenE,
+                    tipo = "empresa",
+                    empresa = new { id = empresa.IdEmpresa, email = empresa.Email, nome = empresa.Nome } // usar alias Nome
                 };
 
-                return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso como empresa."));
+                return Ok(ApiResponse<object>.Ok(dataEmpresa, "Login realizado com sucesso."));
             }
 
-            return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
+            return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
         }
 
-        // ------------------------------------------
-        // LOGIN ESPECÍFICO POR TIPO
-        // ------------------------------------------
-        [HttpPost("tipo/{tipo}", Name = "LoginV2ComTipo")]
-        public async Task<IActionResult> AutenticarPorTipo([FromRoute] string tipo, [FromBody] LoginInput input)
+        [HttpPost("refresh", Name = "RefreshToken")]
+        [SwaggerOperation(Summary = "Renova o token JWT", Description = "Gera novo access token usando um refresh token válido.")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenInput input)
         {
-            if (string.IsNullOrWhiteSpace(input.Email) || string.IsNullOrWhiteSpace(input.Senha))
-                return BadRequest(ApiResponse<string>.Fail("Email e senha são obrigatórios."));
+            if (string.IsNullOrWhiteSpace(input.RefreshToken))
+                return BadRequest(ApiResponse<string>.Fail("Refresh Token inválido."));
 
-            tipo = tipo.ToLower();
+            // Procura em usuários
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.RefreshToken == input.RefreshToken);
 
-            if (tipo != "usuario" && tipo != "empresa")
-                return BadRequest(ApiResponse<string>.Fail("Tipo deve ser 'usuario' ou 'empresa'."));
-
-            // LOGIN USUÁRIO
-            if (tipo == "usuario")
+            if (usuario != null)
             {
-                var usuario = await _context.Usuarios
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.Email == input.Email);
+                if (usuario.ExpiraRefreshToken == null || usuario.ExpiraRefreshToken < DateTime.UtcNow)
+                    return Unauthorized(ApiResponse<string>.Fail("Refresh Token expirado."));
 
-                if (usuario == null || !BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
-                    return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
+                var newAccessToken = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email, "usuario");
+                var newRefreshToken = _jwtService.GenerateRefreshToken();
 
-                var token = _jwtService.GenerateToken(usuario.IdUsuario, usuario.Email);
+                usuario.RefreshToken = newRefreshToken;
+                usuario.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
+                await _context.SaveChangesAsync();
 
-                var data = new
-                {
-                    token,
-                    userType = "usuario",
-                    user = new
-                    {
-                        id = usuario.IdUsuario,
-                        email = usuario.Email,
-                        nome = usuario.Nome
-                    }
-                };
-
-                return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso como usuário."));
+                var data = new { access_token = newAccessToken, refresh_token = newRefreshToken, tipo = "usuario" };
+                return Ok(ApiResponse<object>.Ok(data, "Token renovado com sucesso."));
             }
 
-            // LOGIN EMPRESA
-            var empresa = await _context.Empresas
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Email == input.Email);
+            // Procura em empresas
+            var empresa = await _context.Empresas.FirstOrDefaultAsync(e => e.RefreshToken == input.RefreshToken);
 
-            if (empresa == null || !BCrypt.Net.BCrypt.Verify(input.Senha, empresa.Senha))
-                return Unauthorized(ApiResponse<string>.Fail("Email ou senha inválidos."));
-
-            var tokenEmpresa = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email);
-
-            var dataEmpresa = new
+            if (empresa != null)
             {
-                token = tokenEmpresa,
-                userType = "empresa",
-                empresa = new
-                {
-                    id = empresa.IdEmpresa,
-                    email = empresa.Email,
-                    nome = empresa.Nome,
-                    cnpj = empresa.Cnpj
-                }
-            };
+                if (empresa.ExpiraRefreshToken == null || empresa.ExpiraRefreshToken < DateTime.UtcNow)
+                    return Unauthorized(ApiResponse<string>.Fail("Refresh Token expirado."));
 
-            return Ok(ApiResponse<object>.Ok(dataEmpresa, "Login realizado com sucesso como empresa."));
+                var newAccessToken = _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email, "empresa");
+                var newRefreshToken = _jwtService.GenerateRefreshToken();
+
+                empresa.RefreshToken = newRefreshToken;
+                empresa.ExpiraRefreshToken = DateTime.UtcNow.AddDays(7);
+                await _context.SaveChangesAsync();
+
+                var data = new { access_token = newAccessToken, refresh_token = newRefreshToken, tipo = "empresa" };
+                return Ok(ApiResponse<object>.Ok(data, "Token renovado com sucesso."));
+            }
+
+            return Unauthorized(ApiResponse<string>.Fail("Refresh Token inválido."));
         }
     }
 
-    public class LoginInput
+    // DTOs
+    public class UsuarioLoginInput
     {
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
+    }
+
+    public class RefreshTokenInput
+    {
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

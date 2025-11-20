@@ -8,54 +8,40 @@ namespace JobFitScoreAPI.Models
     public class Empresa
     {
         [Key]
-        [Column("ID_EMPRESA")]
+        [Column("id_empresa")]
         public int IdEmpresa { get; set; }
 
         // Nome fantasia / razão social
         [Required]
-        [Column("NOME")]
+        [Column("nome")]
         [MaxLength(100)]
         public string NomeEmpresa { get; set; } = string.Empty;
 
         [Required]
-        [Column("CNPJ")]
+        [Column("cnpj")]
         [MaxLength(14)]
         public string Cnpj { get; set; } = string.Empty;
 
         [Required]
-        [Column("EMAIL")]
+        [Column("email")]
         [MaxLength(100)]
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [Column("SENHA")]
+        [Column("senha")]
         [MaxLength(200)]
         public string Senha { get; set; } = string.Empty;
 
-        [Column("TELEFONE")]
-        [MaxLength(20)]
-        public string? Telefone { get; set; }
-
-        [Column("SETOR")]
-        [MaxLength(100)]
-        public string? Setor { get; set; }
-
-        [Column("DESCRICAO")]
-        [MaxLength(500)]
-        public string? Descricao { get; set; }
-
-        [Column("REFRESH_TOKEN")]
+        [Column("refresh_token")]
         [MaxLength(200)]
         public string? RefreshToken { get; set; }
 
-        [Column("EXPIRA_REFRESH_TOKEN")]
+        [Column("expira_refresh_token")]
         public DateTime? ExpiraRefreshToken { get; set; }
 
-       
         [JsonIgnore]
         public ICollection<Vaga>? Vagas { get; set; }
 
-        // Alias legado para compatibilidade com controllers que usam Nome
         [NotMapped]
         public string Nome { get => NomeEmpresa; set => NomeEmpresa = value; }
     }

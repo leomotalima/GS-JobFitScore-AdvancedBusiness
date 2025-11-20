@@ -76,15 +76,6 @@ namespace JobFitScoreAPI.Services
             if (!string.IsNullOrWhiteSpace(empresa.Cnpj))
                 empresaExistente.Cnpj = empresa.Cnpj;
 
-            if (!string.IsNullOrWhiteSpace(empresa.Telefone))
-                empresaExistente.Telefone = empresa.Telefone;
-
-            if (!string.IsNullOrWhiteSpace(empresa.Setor))
-                empresaExistente.Setor = empresa.Setor;
-
-            if (!string.IsNullOrWhiteSpace(empresa.Descricao))
-                empresaExistente.Descricao = empresa.Descricao;
-
             await _empresaRepository.UpdateAsync(empresaExistente);
             return empresaExistente;
         }
@@ -114,20 +105,16 @@ namespace JobFitScoreAPI.Services
                 throw new UnauthorizedAccessException("Email ou senha inválidos");
 
             
-            return _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email);
+            return _jwtService.GenerateToken(empresa.IdEmpresa, empresa.Email, "empresa");
         }
 
-        public async Task<IEnumerable<Empresa>> SearchEmpresasAsync(string? nome, string? setor)
+        public async Task<IEnumerable<Empresa>> SearchEmpresasAsync(string? nome)
         {
             var empresas = await _empresaRepository.GetAllAsync();
 
             if (!string.IsNullOrWhiteSpace(nome))
                 empresas = empresas.Where(e =>
                     e.NomeEmpresa.Contains(nome, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrWhiteSpace(setor))
-                empresas = empresas.Where(e =>
-                    e.Setor != null && e.Setor.Contains(setor, StringComparison.OrdinalIgnoreCase));
 
             return empresas;
         }
