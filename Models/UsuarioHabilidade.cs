@@ -16,11 +16,9 @@ namespace JobFitScoreAPI.Models
         [Column("HABILIDADE_ID")]
         public int HabilidadeId { get; set; }
 
-        // Navegação
-        [ForeignKey("USUARIOID")]
+        
         public Usuario? Usuario { get; set; }
 
-        [ForeignKey("HABILIDADEID")]
         public Habilidade? Habilidade { get; set; }
     }
 }
