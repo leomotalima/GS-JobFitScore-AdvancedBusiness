@@ -17,10 +17,8 @@ namespace JobFitScoreAPI.Models
         public int HabilidadeId { get; set; }
 
         // Navegação
-        [ForeignKey("VAGAID")]
         public Vaga? Vaga { get; set; }
 
-        [ForeignKey("HABILIDADEID")]
         public Habilidade? Habilidade { get; set; }
     }
 }
