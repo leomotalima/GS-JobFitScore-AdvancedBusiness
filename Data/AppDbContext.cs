@@ -21,6 +21,18 @@ namespace JobFitScoreAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            
+            modelBuilder.Entity<Habilidade>()
+                .Property(h => h.IdHabilidade)
+                .UseHiLo("SEQ_HABILIDADES", "RM557851"); 
+            // =================================================================================
+
+            
+            modelBuilder.Entity<Vaga>()
+                .Property(v => v.Salario)
+                .HasPrecision(18, 2); 
+            // ===================================================================
+
             modelBuilder.Entity<Usuario>().ToTable("USUARIOS");
             modelBuilder.Entity<Empresa>().ToTable("EMPRESAS");
             modelBuilder.Entity<Vaga>().ToTable("VAGAS");
@@ -36,7 +48,6 @@ namespace JobFitScoreAPI.Data
             modelBuilder.Entity<UsuarioHabilidade>()
                 .HasKey(uh => new { uh.UsuarioId, uh.HabilidadeId });
                 
-
             modelBuilder.Entity<VagaHabilidade>()
                 .HasKey(vh => new { vh.VagaId, vh.HabilidadeId });
 
@@ -64,7 +75,6 @@ namespace JobFitScoreAPI.Data
                 .HasForeignKey(c => c.UsuarioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            
         }
     }
 }

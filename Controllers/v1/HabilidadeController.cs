@@ -53,13 +53,13 @@ namespace JobFitScoreAPI.Controllers.v1
             var totalItems = await _context.Habilidades.CountAsync();
 
             var habilidades = await _context.Habilidades
-                .OrderBy(h => h.Nome)
+                .OrderBy(h => h.NomeHabilidade) // <<--- CORREÇÃO: Usando a propriedade mapeada
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(h => new HabilidadeOutput
                 {
                     IdHabilidade = h.IdHabilidade,
-                    Nome = h.Nome
+                    Nome = h.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
                 })
                 .ToListAsync();
 
@@ -86,7 +86,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 .Select(h => new HabilidadeOutput
                 {
                     IdHabilidade = h.IdHabilidade,
-                    Nome = h.Nome
+                    Nome = h.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
                 })
                 .FirstOrDefaultAsync();
 
@@ -118,7 +118,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
             var habilidade = new Habilidade
             {
-                Nome = input.Nome
+                NomeHabilidade = input.Nome // <<--- CORREÇÃO: Definindo a propriedade mapeada
             };
 
             _context.Habilidades.Add(habilidade);
@@ -127,7 +127,7 @@ namespace JobFitScoreAPI.Controllers.v1
             var output = new HabilidadeOutput
             {
                 IdHabilidade = habilidade.IdHabilidade,
-                Nome = habilidade.Nome
+                Nome = habilidade.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
             };
 
             return CreatedAtAction(nameof(GetHabilidade), new { id = habilidade.IdHabilidade },
@@ -149,14 +149,14 @@ namespace JobFitScoreAPI.Controllers.v1
             if (habilidade == null)
                 return NotFound(ApiResponse<string>.Fail("Habilidade não encontrada."));
 
-            habilidade.Nome = input.Nome ?? habilidade.Nome;
+            habilidade.NomeHabilidade = input.Nome ?? habilidade.NomeHabilidade; // <<--- CORREÇÃO: Usando a propriedade mapeada
 
             await _context.SaveChangesAsync();
 
             var output = new HabilidadeOutput
             {
                 IdHabilidade = habilidade.IdHabilidade,
-                Nome = habilidade.Nome
+                Nome = habilidade.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
             };
 
             return Ok(ApiResponse<HabilidadeOutput>.Ok(output, "Habilidade atualizada com sucesso."));
