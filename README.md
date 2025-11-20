@@ -251,7 +251,8 @@ Execute a aplicação:
 dotnet run
 ```
 
-A API estará disponível em: **[http://localhost:5224/swagger/index.html](http://localhost:5224/swagger/index.html)**
+A API estará disponível em: ** [http://localhost:5142/swagger/index.html](http://localhost:5142/swagger/index.html)**
+                            
 
 ---
 
