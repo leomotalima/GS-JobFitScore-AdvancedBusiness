@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace JobFitScoreAPI.Models
 {
@@ -37,8 +38,8 @@ namespace JobFitScoreAPI.Models
         [Column("EMPRESA_ID")]
         public int EmpresaId { get; set; }
 
-        // Navegação para empresa
-        [ForeignKey("EMPRESAID")]
+        [JsonIgnore] 
+        [ForeignKey(nameof(EmpresaId))]
         public Empresa? Empresa { get; set; }
     }
 }

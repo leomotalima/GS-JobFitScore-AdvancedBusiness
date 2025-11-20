@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace JobFitScoreAPI.Models
 {
@@ -50,7 +51,8 @@ namespace JobFitScoreAPI.Models
         [Column("EXPIRA_REFRESH_TOKEN")]
         public DateTime? ExpiraRefreshToken { get; set; }
 
-        // Relacionamento 1:N com vagas
+       
+        [JsonIgnore]
         public ICollection<Vaga>? Vagas { get; set; }
 
         // Alias legado para compatibilidade com controllers que usam Nome
