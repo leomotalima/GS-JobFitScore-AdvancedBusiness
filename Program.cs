@@ -152,7 +152,6 @@ builder.Services.AddSwaggerGen(opt =>
         Description = "Insira o token JWT desta forma: Bearer {token}"
     });
 
-    // Faz o Swagger enviar o token para todos os endpoints [Authorize]
     opt.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -179,16 +178,6 @@ builder.Services.AddSwaggerGen(opt =>
 // ----------------------
 var hc = builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("BancoPostgre");
-
-if (builder.Environment.EnvironmentName != "Testing")
-{
-    hc.AddUrlGroup(
-        new Uri("https://api.github.com/"),
-        name: "API externa - GitHub",
-        failureStatus: HealthStatus.Degraded
-    );
-}
-
 builder.Services.AddAuthorization();
 
 // ----------------------
