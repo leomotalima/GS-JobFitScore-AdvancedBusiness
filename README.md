@@ -32,6 +32,15 @@ utilizando análise de habilidades e requisitos com base em técnicas de <b>inte
 
 ---
 
+## 🌐 URLs de Acesso
+
+- **API Base URL:** https://gs-jobfitscore-advancedbusiness.onrender.com
+- **Documentação Swagger:** https://gs-jobfitscore-advancedbusiness.onrender.com/swagger
+- **Health Check:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health
+- **Health Ping:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health/ping
+
+---
+
 ## Arquitetura do Sistema
 
 O sistema segue arquitetura em camadas (**Controller → Service → Repository → Data → Model**), garantindo modularidade e manutenibilidade.
@@ -286,6 +295,126 @@ A API estará disponível em: ** [http://localhost:5142/swagger/index.html](http
 | maria@email.com   | maria   | usuario     |
 | contato@beta.com   | beta   | empresa   |
 
+---
+
+## 🗄️ Acesso ao Banco de Dados PostgreSQL (Render)
+
+### Credenciais de Acesso
+
+| Campo | Valor |
+|-------|-------|
+| **Hostname** | `dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com` |
+| **Port** | `5432` |
+| **Database** | `jobfitscore_dviy` |
+| **Username** | `rm554874` |
+| **Password** | `IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu` |
+
+**Connection String Externa:**
+```
+postgresql://rm554874:IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu@dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com/jobfitscore_dviy
+```
+
+---
+
+### 📊 Como Acessar o Banco de Dados
+
+#### Opção 1: Via VSCode (Database Client) - **Recomendado para Professores**
+
+1. **Instalar extensões necessárias:**
+   - [Database Client](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2)
+   - [Database Client JDBC](https://marketplace.visualstudio.com/items?itemName=cweijan.dbclient-jdbc)
+
+2. **Conectar ao banco:**
+   - Abra o VSCode
+   - Clique no ícone do **Database Client** na barra lateral esquerda
+   - Clique em **"+ Add Connection"** ou **"Create Connection"**
+   - Selecione **"PostgreSQL"**
+
+3. **Preencher os dados de conexão:**
+
+   ```
+   Host: dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com
+   Port: 5432
+   Username: rm554874
+   Password: IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu
+   Database: jobfitscore_dviy
+   ```
+
+   **⚠️ IMPORTANTE:** Marque a opção **"Use SSL"** ou **"SSL Mode: Require"**
+
+4. **Testar conexão:**
+   - Clique em **"Test"** para validar
+   - Se bem-sucedido, clique em **"Connect"**
+
+5. **Explorar o banco:**
+   - Expanda a conexão criada
+   - Navegue pelas tabelas: `Usuarios`, `Vagas`, `Candidaturas`, `Empresas`, `Habilidades`, etc.
+   - Clique com botão direito em qualquer tabela → **"Select Top 100"** para visualizar os dados
+
+---
+
+#### Opção 2: Via Terminal (psql)
+
+**Instalar o cliente PostgreSQL:**
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install postgresql-client
+```
+
+# macOS
+```bash
+brew install postgresql
+```
+
+# Windows
+### [Link para Download](https://www.postgresql.org/download/)
+
+---
+
+**Conectar ao banco:**
+```bash
+psql postgresql://rm554874:IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu@dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com/jobfitscore_dviy
+```
+
+**Comandos úteis no psql:**
+```sql
+-- Listar todas as tabelas
+\dt
+
+-- Ver estrutura de uma tabela
+\d "Usuarios"
+
+-- Consultar dados
+SELECT * FROM "Usuarios" LIMIT 10;
+
+-- Sair
+\q
+```
+
+---
+
+### 📋 Tabelas Disponíveis no Banco
+
+| Tabela | Descrição |
+|--------|-----------|
+| `Usuarios` | Dados de usuários (candidatos e empresas) |
+| `Vagas` | Vagas de emprego cadastradas |
+| `Candidaturas` | Candidaturas dos usuários às vagas |
+| `Empresas` | Informações das empresas |
+| `Habilidades` | Habilidades técnicas cadastradas |
+| `UsuarioHabilidades` | Relacionamento entre usuários e suas habilidades |
+| `VagaHabilidades` | Relacionamento entre vagas e habilidades requeridas |
+| `Cursos` | Cursos disponíveis para recomendação |
+| `__EFMigrationsHistory` | Histórico de migrations do Entity Framework |
+
+---
+
+### ⚠️ Notas Importantes para Avaliação
+
+- **SSL Obrigatório:** O PostgreSQL do Render **requer conexão SSL**. Certifique-se de habilitar esta opção em qualquer ferramenta de conexão.
+- **Conexão Externa:** Use sempre o hostname com `.oregon-postgres.render.com` para acesso externo.
+- **Firewall:** O banco está configurado para aceitar conexões de qualquer IP (0.0.0.0/0).
 
 ---
 
