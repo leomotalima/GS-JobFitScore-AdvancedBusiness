@@ -27,7 +27,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // Classe de resposta padronizada
+
         public class ApiResponse<T>
         {
             public bool Success { get; set; }
@@ -41,7 +41,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // GET - Listar usuários
         [HttpGet(Name = "GetUsuarios")]
         [SwaggerOperation(Summary = "Lista todos os usuários")]
         [SwaggerResponse(StatusCodes.Status200OK, "Lista de usuários retornada com sucesso")]
@@ -87,7 +86,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<object>.Ok(result, "Usuários listados com sucesso."));
         }
 
-        // GET - Buscar usuário por ID
         [HttpGet("{id}", Name = "GetUsuario")]
         [SwaggerOperation(Summary = "Obtém um usuário específico")]
         [SwaggerResponse(StatusCodes.Status200OK, "Usuário encontrado com sucesso")]
@@ -122,7 +120,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<object>.Ok(result, "Usuário encontrado com sucesso."));
         }
 
-        // POST - Criar usuário (Aberto)
         [AllowAnonymous]
         [HttpPost(Name = "CreateUsuario")]
         [SwaggerOperation(Summary = "Cria um novo usuário")]
@@ -154,7 +151,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 ApiResponse<UsuarioOutput>.Ok(output, "Usuário criado com sucesso."));
         }
 
-        // PUT - Atualizar usuário
         [HttpPut("{id}", Name = "UpdateUsuario")]
         [SwaggerOperation(Summary = "Atualiza um usuário existente")]
         [SwaggerResponse(StatusCodes.Status200OK, "Usuário atualizado com sucesso")]
@@ -184,7 +180,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<UsuarioOutput>.Ok(output, "Usuário atualizado com sucesso."));
         }
 
-        // DELETE - Remover usuário
         [HttpDelete("{id}", Name = "DeleteUsuario")]
         [SwaggerOperation(Summary = "Remove um usuário")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Usuário removido com sucesso")]
@@ -201,7 +196,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        // HATEOAS Helpers
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetUsuario), "Usuario", new { id }) ?? string.Empty;
 

@@ -19,7 +19,6 @@ namespace JobFitScoreAPI.Controllers.v1
             _context = context;
         }
 
-        // GET: api/v1/vagas
         [HttpGet]
         [SwaggerOperation(Summary = "Lista todas as vagas")]
         [SwaggerResponse(StatusCodes.Status200OK, "Lista de vagas retornada com sucesso")]
@@ -38,7 +37,6 @@ namespace JobFitScoreAPI.Controllers.v1
             });
         }
 
-        // GET: api/v1/vagas/{id}
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Obtém uma vaga específica")]
         [SwaggerResponse(StatusCodes.Status200OK, "Vaga encontrada com sucesso")]
@@ -66,7 +64,6 @@ namespace JobFitScoreAPI.Controllers.v1
             });
         }
 
-        // POST: api/v1/vagas
         [HttpPost]
         [SwaggerOperation(Summary = "Cria uma nova vaga")]
         [SwaggerResponse(StatusCodes.Status201Created, "Vaga criada com sucesso")]
@@ -87,7 +84,6 @@ namespace JobFitScoreAPI.Controllers.v1
             });
         }
 
-        // PUT: api/v1/vagas/{id}
         [HttpPut("{id}")]
         [SwaggerOperation(Summary = "Atualiza uma vaga existente")]
         [SwaggerResponse(StatusCodes.Status200OK, "Vaga atualizada com sucesso")]
@@ -118,7 +114,6 @@ namespace JobFitScoreAPI.Controllers.v1
             });
         }
 
-        // DELETE: api/v1/vagas/{id}
         [HttpDelete("{id}")]
         [SwaggerOperation(Summary = "Remove uma vaga")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Vaga removida com sucesso")]

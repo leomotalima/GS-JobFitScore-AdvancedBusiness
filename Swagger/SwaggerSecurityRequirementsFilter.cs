@@ -8,7 +8,6 @@ namespace JobFitScoreAPI.Swagger
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            // Verifica se o endpoint tem [AllowAnonymous]
             var hasAllowAnonymous = context.MethodInfo.GetCustomAttributes(true)
                 .Any(attr => attr is AllowAnonymousAttribute);
 
@@ -16,7 +15,6 @@ namespace JobFitScoreAPI.Swagger
                 .GetCustomAttributes(true)
                 .Any(attr => attr is AllowAnonymousAttribute) ?? false;
 
-            // Se NÃO tem [AllowAnonymous], adiciona o Bearer
             if (!hasAllowAnonymous && !controllerHasAllowAnonymous)
             {
                 operation.Security = new List<OpenApiSecurityRequirement>

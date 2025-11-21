@@ -27,7 +27,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // Classe de resposta padronizada
+
         public class ApiResponse<T>
         {
             public bool Success { get; set; }
@@ -41,7 +41,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // GET - Listar habilidades
         [HttpGet(Name = "GetHabilidades")]
         [SwaggerOperation(Summary = "Lista todas as habilidades", Description = "Retorna uma lista paginada de habilidades.")]
         [SwaggerResponse(StatusCodes.Status200OK, "Lista retornada com sucesso")]
@@ -53,13 +52,13 @@ namespace JobFitScoreAPI.Controllers.v1
             var totalItems = await _context.Habilidades.CountAsync();
 
             var habilidades = await _context.Habilidades
-                .OrderBy(h => h.NomeHabilidade) // <<--- CORREÇÃO: Usando a propriedade mapeada
+                .OrderBy(h => h.NomeHabilidade) 
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(h => new HabilidadeOutput
                 {
                     IdHabilidade = h.IdHabilidade,
-                    Nome = h.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
+                    Nome = h.NomeHabilidade
                 })
                 .ToListAsync();
 
@@ -74,7 +73,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<object>.Ok(new { meta, data = habilidades }, "Habilidades listadas com sucesso."));
         }
 
-        // GET - Buscar habilidade por ID
         [HttpGet("{id}", Name = "GetHabilidade")]
         [SwaggerOperation(Summary = "Obtém uma habilidade específica", Description = "Retorna os detalhes de uma habilidade pelo ID.")]
         [SwaggerResponse(StatusCodes.Status200OK, "Habilidade encontrada com sucesso")]
@@ -86,7 +84,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 .Select(h => new HabilidadeOutput
                 {
                     IdHabilidade = h.IdHabilidade,
-                    Nome = h.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
+                    Nome = h.NomeHabilidade 
                 })
                 .FirstOrDefaultAsync();
 
@@ -106,7 +104,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<object>.Ok(result, "Habilidade encontrada com sucesso."));
         }
 
-        // POST - Criar habilidade
         [HttpPost(Name = "CreateHabilidade")]
         [SwaggerOperation(Summary = "Cria uma nova habilidade", Description = "Adiciona uma nova habilidade no sistema.")]
         [SwaggerResponse(StatusCodes.Status201Created, "Habilidade criada com sucesso")]
@@ -118,7 +115,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
             var habilidade = new Habilidade
             {
-                NomeHabilidade = input.Nome // <<--- CORREÇÃO: Definindo a propriedade mapeada
+                NomeHabilidade = input.Nome 
             };
 
             _context.Habilidades.Add(habilidade);
@@ -127,14 +124,13 @@ namespace JobFitScoreAPI.Controllers.v1
             var output = new HabilidadeOutput
             {
                 IdHabilidade = habilidade.IdHabilidade,
-                Nome = habilidade.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
+                Nome = habilidade.NomeHabilidade
             };
 
             return CreatedAtAction(nameof(GetHabilidade), new { id = habilidade.IdHabilidade },
                 ApiResponse<HabilidadeOutput>.Ok(output, "Habilidade criada com sucesso."));
         }
 
-        // PUT - Atualizar habilidade
         [HttpPut("{id}", Name = "UpdateHabilidade")]
         [SwaggerOperation(Summary = "Atualiza uma habilidade existente")]
         [SwaggerResponse(StatusCodes.Status200OK, "Habilidade atualizada com sucesso")]
@@ -149,20 +145,19 @@ namespace JobFitScoreAPI.Controllers.v1
             if (habilidade == null)
                 return NotFound(ApiResponse<string>.Fail("Habilidade não encontrada."));
 
-            habilidade.NomeHabilidade = input.Nome ?? habilidade.NomeHabilidade; // <<--- CORREÇÃO: Usando a propriedade mapeada
+            habilidade.NomeHabilidade = input.Nome ?? habilidade.NomeHabilidade;
 
             await _context.SaveChangesAsync();
 
             var output = new HabilidadeOutput
             {
                 IdHabilidade = habilidade.IdHabilidade,
-                Nome = habilidade.NomeHabilidade // <<--- CORREÇÃO: Usando a propriedade mapeada para o DTO
+                Nome = habilidade.NomeHabilidade
             };
 
             return Ok(ApiResponse<HabilidadeOutput>.Ok(output, "Habilidade atualizada com sucesso."));
         }
 
-        // DELETE - Remover habilidade
         [HttpDelete("{id}", Name = "DeleteHabilidade")]
         [SwaggerOperation(Summary = "Remove uma habilidade", Description = "Exclui uma habilidade cadastrada no sistema.")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Habilidade removida com sucesso")]
@@ -179,7 +174,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetHabilidade), "Habilidade", new { id }) ?? string.Empty;
 

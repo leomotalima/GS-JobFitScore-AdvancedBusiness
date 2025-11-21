@@ -11,7 +11,6 @@ namespace JobFitScoreAPI.Models
         [Column("id_empresa")]
         public int IdEmpresa { get; set; }
 
-        // Nome fantasia / razão social
         [Required]
         [Column("nome")]
         [MaxLength(100)]

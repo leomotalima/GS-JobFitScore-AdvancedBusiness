@@ -49,16 +49,13 @@ namespace JobFitScoreAPI.Controllers.v2
 
             var email = input.Email.Trim().ToLower();
 
-            // Tenta encontrar usuário
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
 
-            // Tenta encontrar empresa se não for usuário
             var empresa = usuario == null ? await _context.Empresas.FirstOrDefaultAsync(e => e.Email.ToLower() == email) : null;
 
             if (usuario == null && empresa == null)
                 return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
 
-            // Login de usuário
             if (usuario != null)
             {
                 if (!BCrypt.Net.BCrypt.Verify(input.Senha, usuario.Senha))
@@ -82,7 +79,6 @@ namespace JobFitScoreAPI.Controllers.v2
                 return Ok(ApiResponse<object>.Ok(data, "Login realizado com sucesso."));
             }
 
-            // Login de empresa
             if (empresa != null)
             {
                 if (!BCrypt.Net.BCrypt.Verify(input.Senha, empresa.Senha))
@@ -100,7 +96,7 @@ namespace JobFitScoreAPI.Controllers.v2
                     access_token = accessTokenE,
                     refresh_token = refreshTokenE,
                     tipo = "empresa",
-                    empresa = new { id = empresa.IdEmpresa, email = empresa.Email, nome = empresa.Nome } // usar alias Nome
+                    empresa = new { id = empresa.IdEmpresa, email = empresa.Email, nome = empresa.Nome }
                 };
 
                 return Ok(ApiResponse<object>.Ok(dataEmpresa, "Login realizado com sucesso."));
@@ -116,7 +112,6 @@ namespace JobFitScoreAPI.Controllers.v2
             if (string.IsNullOrWhiteSpace(input.RefreshToken))
                 return BadRequest(ApiResponse<string>.Fail("Refresh Token inválido."));
 
-            // Procura em usuários
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.RefreshToken == input.RefreshToken);
 
             if (usuario != null)
@@ -135,7 +130,6 @@ namespace JobFitScoreAPI.Controllers.v2
                 return Ok(ApiResponse<object>.Ok(data, "Token renovado com sucesso."));
             }
 
-            // Procura em empresas
             var empresa = await _context.Empresas.FirstOrDefaultAsync(e => e.RefreshToken == input.RefreshToken);
 
             if (empresa != null)
@@ -158,7 +152,6 @@ namespace JobFitScoreAPI.Controllers.v2
         }
     }
 
-    // DTOs
     public class UsuarioLoginInput
     {
         public string Email { get; set; } = string.Empty;
