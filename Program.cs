@@ -210,25 +210,22 @@ builder.Services.AddOpenTelemetry()
 var app = builder.Build();
 
 // ----------------------
-// Swagger no ambiente Dev
+// Swagger (Dev e Produção)
 // ----------------------
-if (app.Environment.IsDevelopment())
-{
-    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    foreach (var description in provider.ApiVersionDescriptions)
     {
-        foreach (var description in provider.ApiVersionDescriptions)
-        {
-            options.SwaggerEndpoint(
-                $"/swagger/{description.GroupName}/swagger.json",
-                $"JobFitScore API {description.GroupName.ToUpper()}"
-            );
-        }
-        options.RoutePrefix = "swagger";
-    });
-}
+        options.SwaggerEndpoint(
+            $"/swagger/{description.GroupName}/swagger.json",
+            $"JobFitScore API {description.GroupName.ToUpper()}"
+        );
+    }
+    options.RoutePrefix = "swagger";
+});
 
 // ----------------------
 // Redirect root → Swagger
