@@ -162,15 +162,6 @@ builder.Services.AddSwaggerGen(opt =>
 var hc = builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("BancoOracle");
 
-if (builder.Environment.EnvironmentName != "Testing")
-{
-    hc.AddUrlGroup(
-        new Uri("https://api.github.com/"),
-        name: "API externa - GitHub",
-        failureStatus: HealthStatus.Degraded
-    );
-}
-
 builder.Services.AddAuthorization();
 
 // ----------------------
