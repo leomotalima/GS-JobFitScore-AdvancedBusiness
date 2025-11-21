@@ -23,7 +23,7 @@ namespace JobFitScoreAPI.Data
             
             modelBuilder.Entity<Habilidade>()
                 .Property(h => h.IdHabilidade)
-                .UseHiLo("SEQ_HABILIDADES", "RM557851"); 
+                .UseHiLo("SEQ_HABILIDADES", "public"); 
             // =================================================================================
 
             modelBuilder.Entity<Usuario>().ToTable("USUARIOS");

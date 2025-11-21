@@ -36,17 +36,17 @@ if (builder.Environment.EnvironmentName != "Testing")
     Env.Load();
 
 // ----------------------
-// Banco de Dados Oracle
+// Banco de Dados Postgre
 // ----------------------
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__OracleConnection");
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PostgresConnection");
 
 if (builder.Environment.EnvironmentName != "Testing")
 {
     if (string.IsNullOrEmpty(connectionString))
-        throw new InvalidOperationException("Connection string Oracle não encontrada!");
+        throw new InvalidOperationException("Connection string Postgre não encontrada!");
 
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseOracle(connectionString));
+        options.UseNpgsql(connectionString));
 }
 
 // ----------------------
@@ -178,7 +178,7 @@ builder.Services.AddSwaggerGen(opt =>
 // Health Check
 // ----------------------
 var hc = builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AppDbContext>("BancoOracle");
+    .AddDbContextCheck<AppDbContext>("BancoPostgre");
 
 if (builder.Environment.EnvironmentName != "Testing")
 {

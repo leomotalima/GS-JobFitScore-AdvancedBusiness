@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Oracle.EntityFrameworkCore.Metadata;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace JobFitScoreAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251117041739_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251121014008_SeedInitialData")]
+    partial class SeedInitialData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,75 +21,38 @@ namespace JobFitScoreAPI.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("JobFitScoreAPI.Models.AuditoriaLog", b =>
-                {
-                    b.Property<int>("IdAuditoria")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
-                        .HasColumnName("id_auditoria");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdAuditoria"));
-
-                    b.Property<DateTime>("DataOperacao")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("data_operacao");
-
-                    b.Property<string>("Detalhe")
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("detalhe");
-
-                    b.Property<string>("NomeTabela")
-                        .IsRequired()
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("nome_tabela");
-
-                    b.Property<string>("Operacao")
-                        .IsRequired()
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("operacao");
-
-                    b.Property<int?>("RegistroId")
-                        .HasColumnType("NUMBER(10)")
-                        .HasColumnName("registro_id");
-
-                    b.Property<string>("UsuarioBanco")
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("usuario_banco");
-
-                    b.HasKey("IdAuditoria");
-
-                    b.ToTable("AUDITORIA_LOG", (string)null);
-                });
+            modelBuilder.HasSequence("SEQ_HABILIDADES", "public")
+                .IncrementsBy(10);
 
             modelBuilder.Entity("JobFitScoreAPI.Models.Candidatura", b =>
                 {
                     b.Property<int>("IdCandidatura")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_candidatura");
 
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCandidatura"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdCandidatura"));
 
                     b.Property<DateTime>("DataCandidatura")
-                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("data_candidatura");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("usuario_id");
 
                     b.Property<int>("VagaId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("vaga_id");
 
                     b.HasKey("IdCandidatura");
@@ -105,28 +68,37 @@ namespace JobFitScoreAPI.Migrations
                 {
                     b.Property<int>("IdCurso")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_curso");
 
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCurso"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdCurso"));
 
                     b.Property<int?>("CargaHoraria")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("carga_horaria");
+
+                    b.Property<DateTime?>("DataConclusao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_conclusao");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descricao");
 
                     b.Property<string>("Instituicao")
                         .HasMaxLength(150)
-                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("instituicao");
 
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("nome");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("usuario_id");
 
                     b.HasKey("IdCurso");
@@ -140,42 +112,42 @@ namespace JobFitScoreAPI.Migrations
                 {
                     b.Property<int>("IdEmpresa")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_empresa");
 
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdEmpresa"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdEmpresa"));
 
                     b.Property<string>("Cnpj")
                         .IsRequired()
                         .HasMaxLength(14)
-                        .HasColumnType("NVARCHAR2(14)")
+                        .HasColumnType("character varying(14)")
                         .HasColumnName("cnpj");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("email");
 
                     b.Property<DateTime?>("ExpiraRefreshToken")
-                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expira_refresh_token");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("NomeEmpresa")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nome");
 
                     b.Property<string>("RefreshToken")
                         .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("refresh_token");
 
                     b.Property<string>("Senha")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("senha");
 
                     b.HasKey("IdEmpresa");
@@ -187,15 +159,25 @@ namespace JobFitScoreAPI.Migrations
                 {
                     b.Property<int>("IdHabilidade")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_habilidade");
 
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdHabilidade"));
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("IdHabilidade"), "SEQ_HABILIDADES", "public");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("Categoria")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("categoria");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descricao");
+
+                    b.Property<string>("NomeHabilidade")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nome");
 
                     b.HasKey("IdHabilidade");
@@ -207,36 +189,36 @@ namespace JobFitScoreAPI.Migrations
                 {
                     b.Property<int>("IdUsuario")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_usuario");
 
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuario"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdUsuario"));
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("email");
 
                     b.Property<DateTime?>("ExpiraRefreshToken")
-                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("expira_refresh_token");
 
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nome");
 
                     b.Property<string>("RefreshToken")
                         .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("refresh_token");
 
                     b.Property<string>("Senha")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("senha");
 
                     b.HasKey("IdUsuario");
@@ -247,15 +229,15 @@ namespace JobFitScoreAPI.Migrations
             modelBuilder.Entity("JobFitScoreAPI.Models.UsuarioHabilidade", b =>
                 {
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("usuario_id");
 
                     b.Property<int>("HabilidadeId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("habilidade_id");
 
                     b.Property<int>("IdUsuarioHabilidade")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_usuario_habilidade");
 
                     b.HasKey("UsuarioId", "HabilidadeId");
@@ -269,19 +251,19 @@ namespace JobFitScoreAPI.Migrations
                 {
                     b.Property<int>("IdVaga")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_vaga");
 
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVaga"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdVaga"));
 
                     b.Property<int>("EmpresaId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("empresa_id");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("titulo");
 
                     b.HasKey("IdVaga");
@@ -294,15 +276,15 @@ namespace JobFitScoreAPI.Migrations
             modelBuilder.Entity("JobFitScoreAPI.Models.VagaHabilidade", b =>
                 {
                     b.Property<int>("VagaId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("vaga_id");
 
                     b.Property<int>("HabilidadeId")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("habilidade_id");
 
                     b.Property<int>("IdVagaHabilidade")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("integer")
                         .HasColumnName("id_vaga_habilidade");
 
                     b.HasKey("VagaId", "HabilidadeId");
