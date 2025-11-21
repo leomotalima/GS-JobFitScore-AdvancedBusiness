@@ -27,7 +27,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-        // Classe de resposta padronizada
+
         public class ApiResponse<T>
         {
             public bool Success { get; set; }
@@ -41,7 +41,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
-        // GET - Habilidades de um usuário
         [HttpGet("{usuarioId}", Name = "GetHabilidadesDoUsuario")]
         [SwaggerOperation(Summary = "Lista habilidades de um usuário")]
         [SwaggerResponse(StatusCodes.Status200OK)]
@@ -78,7 +77,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<object>.Ok(result, "Habilidades listadas com sucesso."));
         }
 
-        // POST - Adicionar habilidade ao usuário
         [HttpPost(Name = "AdicionarHabilidadeUsuario")]
         [SwaggerOperation(Summary = "Adiciona habilidade ao usuário")]
         [SwaggerResponse(StatusCodes.Status201Created)]
@@ -128,7 +126,6 @@ namespace JobFitScoreAPI.Controllers.v1
                 ApiResponse<object>.Ok(result, "Habilidade adicionada com sucesso."));
         }
 
-        // DELETE - Remover habilidade
         [HttpDelete(Name = "RemoverHabilidadeUsuario")]
         [SwaggerOperation(Summary = "Remove habilidade do usuário")]
         [SwaggerResponse(StatusCodes.Status204NoContent)]
@@ -151,7 +148,6 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
-        // HATEOAS Helper URLs
         private string GetUserSkillsUrl(int usuarioId) =>
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetHabilidadesDoUsuario), "UsuarioHabilidade",
                 new { usuarioId }) ?? string.Empty;

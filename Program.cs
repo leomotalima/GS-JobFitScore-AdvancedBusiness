@@ -36,17 +36,17 @@ if (builder.Environment.EnvironmentName != "Testing")
     Env.Load();
 
 // ----------------------
-// Banco de Dados Oracle
+// Banco de Dados Postgre
 // ----------------------
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__OracleConnection");
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PostgresConnection");
 
 if (builder.Environment.EnvironmentName != "Testing")
 {
     if (string.IsNullOrEmpty(connectionString))
-        throw new InvalidOperationException("Connection string Oracle não encontrada!");
+        throw new InvalidOperationException("Connection string Postgre não encontrada!");
 
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseOracle(connectionString));
+        options.UseNpgsql(connectionString));
 }
 
 // ----------------------
@@ -141,7 +141,6 @@ builder.Services.AddSwaggerGen(opt =>
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "JobFitScore API", Version = "v1" });
     opt.SwaggerDoc("v2", new OpenApiInfo { Title = "JobFitScore API", Version = "v2" });
 
-    // Definição do esquema de autenticação Bearer
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -149,46 +148,19 @@ builder.Services.AddSwaggerGen(opt =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Insira o token JWT desta forma: Bearer {token}"
-    });
-
-    // Faz o Swagger enviar o token para todos os endpoints [Authorize]
-    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference 
-                { 
-                    Type = ReferenceType.SecurityScheme, 
-                    Id = "Bearer" 
-                }
-            },
-            Array.Empty<string>()
-        }
+        Description = "Insira o token JWT(tokenAcesso)"
     });
 
     opt.OperationFilter<SwaggerSecurityRequirementsFilter>();
     opt.OperationFilter<SwaggerAllowAnonymousFilter>();
-    opt.DocumentFilter<Documentacao>();
-    opt.DocumentFilter<OrdenarTagsDocumentFilter>();
+    opt.EnableAnnotations();
 });
 
 // ----------------------
 // Health Check
 // ----------------------
 var hc = builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AppDbContext>("BancoOracle");
-
-if (builder.Environment.EnvironmentName != "Testing")
-{
-    hc.AddUrlGroup(
-        new Uri("https://api.github.com/"),
-        name: "API externa - GitHub",
-        failureStatus: HealthStatus.Degraded
-    );
-}
-
+    .AddDbContextCheck<AppDbContext>("BancoPostgre");
 builder.Services.AddAuthorization();
 
 // ----------------------
@@ -210,25 +182,22 @@ builder.Services.AddOpenTelemetry()
 var app = builder.Build();
 
 // ----------------------
-// Swagger no ambiente Dev
+// Swagger (Dev e Produção)
 // ----------------------
-if (app.Environment.IsDevelopment())
-{
-    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    foreach (var description in provider.ApiVersionDescriptions)
     {
-        foreach (var description in provider.ApiVersionDescriptions)
-        {
-            options.SwaggerEndpoint(
-                $"/swagger/{description.GroupName}/swagger.json",
-                $"JobFitScore API {description.GroupName.ToUpper()}"
-            );
-        }
-        options.RoutePrefix = "swagger";
-    });
-}
+        options.SwaggerEndpoint(
+            $"/swagger/{description.GroupName}/swagger.json",
+            $"JobFitScore API {description.GroupName.ToUpper()}"
+        );
+    }
+    options.RoutePrefix = "swagger";
+});
 
 // ----------------------
 // Redirect root → Swagger

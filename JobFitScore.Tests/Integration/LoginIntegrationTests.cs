@@ -25,9 +25,9 @@ namespace JobFitScore.Tests
             var response = await _client.PostAsJsonAsync("/api/v1/login", loginData);
 
             var json = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(json); // Debug
+            Console.WriteLine(json);
 
-            response.EnsureSuccessStatusCode(); // 200 OK
+            response.EnsureSuccessStatusCode();
 
             Assert.Contains("token", json.ToLower());
             Assert.Contains("login@teste.com", json.ToLower());

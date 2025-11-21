@@ -10,13 +10,13 @@ namespace JobFitScoreAPI.Data
         {
             Env.Load();
 
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__OracleConnection");
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__PostgresConnection");
 
             if (string.IsNullOrEmpty(connectionString))
                 throw new InvalidOperationException("Connection string não encontrada no .env");
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseOracle(connectionString);
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }

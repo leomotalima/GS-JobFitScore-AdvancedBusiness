@@ -28,7 +28,6 @@ private readonly LinkGenerator _linkGenerator;
         _linkGenerator = linkGenerator;  
     }  
 
-    // Classe de resposta padronizada  
     public class ApiResponse<T>  
     {  
         public bool Success { get; set; }  
@@ -42,7 +41,6 @@ private readonly LinkGenerator _linkGenerator;
             new ApiResponse<T> { Success = false, Message = message };  
     }  
 
-    // GET - Listar empresas  
     [HttpGet(Name = "GetEmpresas")]  
     [SwaggerOperation(Summary = "Lista todas as empresas", Description = "Retorna uma lista paginada de empresas.")]  
     [SwaggerResponse(StatusCodes.Status200OK, "Lista de empresas retornada com sucesso")]  
@@ -61,7 +59,7 @@ private readonly LinkGenerator _linkGenerator;
             .Select(e => new EmpresaOutput  
             {  
                 IdEmpresa = e.IdEmpresa,  
-                Nome = e.NomeEmpresa,  // CORRIGIDO  
+                Nome = e.NomeEmpresa,
                 Cnpj = e.Cnpj,  
                 Email = e.Email  
             })  
@@ -78,7 +76,6 @@ private readonly LinkGenerator _linkGenerator;
         return Ok(ApiResponse<object>.Ok(new { meta, data = empresas }, "Empresas listadas com sucesso."));  
     }  
 
-    // GET - Buscar empresa por ID  
     [HttpGet("{id}", Name = "GetEmpresa")]  
     [SwaggerOperation(Summary = "Obtém uma empresa específica", Description = "Retorna os detalhes de uma empresa pelo ID.")]  
     [SwaggerResponse(StatusCodes.Status200OK, "Empresa encontrada com sucesso")]  
@@ -90,7 +87,7 @@ private readonly LinkGenerator _linkGenerator;
             .Select(e => new EmpresaOutput  
             {  
                 IdEmpresa = e.IdEmpresa,  
-                Nome = e.NomeEmpresa,  // CORRIGIDO  
+                Nome = e.NomeEmpresa,
                 Cnpj = e.Cnpj,  
                 Email = e.Email  
             })  
@@ -112,7 +109,6 @@ private readonly LinkGenerator _linkGenerator;
         return Ok(ApiResponse<object>.Ok(result, "Empresa encontrada com sucesso."));  
     }  
 
-    // POST - Criar empresa  
     [HttpPost(Name = "CreateEmpresa")]  
     [SwaggerOperation(Summary = "Cria uma nova empresa", Description = "Adiciona uma nova empresa no sistema.")]  
     [SwaggerResponse(StatusCodes.Status201Created, "Empresa criada com sucesso")]  
@@ -124,7 +120,7 @@ private readonly LinkGenerator _linkGenerator;
 
         var empresa = new Empresa  
         {  
-            NomeEmpresa = input.Nome,  // CORRIGIDO  
+            NomeEmpresa = input.Nome, 
             Cnpj = input.Cnpj,  
             Email = input.Email,  
             Senha = input.Senha ?? string.Empty  
@@ -136,7 +132,7 @@ private readonly LinkGenerator _linkGenerator;
         var output = new EmpresaOutput  
         {  
             IdEmpresa = empresa.IdEmpresa,  
-            Nome = empresa.NomeEmpresa,  // CORRIGIDO  
+            Nome = empresa.NomeEmpresa,
             Cnpj = empresa.Cnpj,  
             Email = empresa.Email  
         };  
@@ -145,7 +141,6 @@ private readonly LinkGenerator _linkGenerator;
             ApiResponse<EmpresaOutput>.Ok(output, "Empresa criada com sucesso."));  
     }  
 
-    // PUT - Atualizar empresa  
     [HttpPut("{id}", Name = "UpdateEmpresa")]  
     [SwaggerOperation(Summary = "Atualiza uma empresa existente", Description = "Modifica informações de uma empresa.")]  
     [SwaggerResponse(StatusCodes.Status200OK, "Empresa atualizada com sucesso")]  
@@ -160,7 +155,7 @@ private readonly LinkGenerator _linkGenerator;
         if (empresa == null)  
             return NotFound(ApiResponse<string>.Fail("Empresa não encontrada."));  
 
-        empresa.NomeEmpresa = input.Nome ?? empresa.NomeEmpresa;  // CORRIGIDO  
+        empresa.NomeEmpresa = input.Nome ?? empresa.NomeEmpresa; 
         empresa.Email = input.Email ?? empresa.Email;  
 
         _context.Entry(empresa).State = EntityState.Modified;  
@@ -169,7 +164,7 @@ private readonly LinkGenerator _linkGenerator;
         var output = new EmpresaOutput  
         {  
             IdEmpresa = empresa.IdEmpresa,  
-            Nome = empresa.NomeEmpresa,  // CORRIGIDO  
+            Nome = empresa.NomeEmpresa,  
             Cnpj = empresa.Cnpj,  
             Email = empresa.Email  
         };  
@@ -177,7 +172,6 @@ private readonly LinkGenerator _linkGenerator;
         return Ok(ApiResponse<EmpresaOutput>.Ok(output, "Empresa atualizada com sucesso."));  
     }  
 
-    // DELETE - Remover empresa  
     [HttpDelete("{id}", Name = "DeleteEmpresa")]  
     [SwaggerOperation(Summary = "Remove uma empresa", Description = "Exclui uma empresa cadastrada do sistema.")]  
     [SwaggerResponse(StatusCodes.Status204NoContent, "Empresa removida com sucesso")]  
@@ -194,7 +188,6 @@ private readonly LinkGenerator _linkGenerator;
         return NoContent();  
     }  
 
-    // MÉTODOS AUXILIARES HATEOAS  
     private string GetByIdUrl(int id) =>  
         _linkGenerator.GetUriByAction(HttpContext, nameof(GetEmpresa), "Empresa", new { id }) ?? string.Empty;  
 

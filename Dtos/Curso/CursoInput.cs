@@ -9,7 +9,6 @@ namespace JobFitScoreAPI.Dtos.Curso
         public int? CargaHoraria { get; set; }
         public int UsuarioId { get; set; }
 
-        // Adicione estes campos
         public DateTime? DataConclusao { get; set; }
         public string? Descricao { get; set; }
     }

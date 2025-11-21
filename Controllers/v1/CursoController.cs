@@ -36,7 +36,6 @@ private readonly AppDbContext _context;
             new ApiResponse<T> { Success = false, Message = message };
     }
 
-    // GET - Listar cursos (paginado)
     [HttpGet(Name = "GetCursos")]
     public async Task<IActionResult> GetCursos(int page = 1, int pageSize = 10)
     {
@@ -72,7 +71,6 @@ private readonly AppDbContext _context;
         return Ok(ApiResponse<object>.Ok(new { meta, data = cursos }, "Cursos listados com sucesso."));
     }
 
-    // GET - Buscar curso por ID
     [HttpGet("{id}", Name = "GetCurso")]
     public async Task<IActionResult> GetCurso(int id)
     {
@@ -96,7 +94,6 @@ private readonly AppDbContext _context;
         return Ok(ApiResponse<CursoOutput>.Ok(output, "Curso encontrado com sucesso."));
     }
 
-    // POST - Criar curso
     [HttpPost(Name = "CreateCurso")]
     public async Task<IActionResult> CreateCurso([FromBody] CursoInput input)
     {
@@ -129,7 +126,6 @@ private readonly AppDbContext _context;
         return CreatedAtAction(nameof(GetCurso), new { id = curso.IdCurso }, ApiResponse<CursoOutput>.Ok(output, "Curso criado com sucesso."));
     }
 
-    // PUT - Atualizar curso
     [HttpPut("{id}", Name = "UpdateCurso")]
     public async Task<IActionResult> UpdateCurso(int id, [FromBody] CursoInput input)
     {
@@ -163,7 +159,6 @@ private readonly AppDbContext _context;
         return Ok(ApiResponse<CursoOutput>.Ok(output, "Curso atualizado com sucesso."));
     }
 
-    // DELETE - Remover curso
     [HttpDelete("{id}", Name = "DeleteCurso")]
     public async Task<IActionResult> DeleteCurso(int id)
     {

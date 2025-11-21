@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -11,36 +12,26 @@ namespace JobFitScoreAPI.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "AUDITORIA_LOG",
-                columns: table => new
-                {
-                    id_auditoria = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome_tabela = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    operacao = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    registro_id = table.Column<int>(type: "NUMBER(10)", nullable: true),
-                    usuario_banco = table.Column<string>(type: "NVARCHAR2(2000)", nullable: true),
-                    data_operacao = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
-                    detalhe = table.Column<string>(type: "NVARCHAR2(2000)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AUDITORIA_LOG", x => x.id_auditoria);
-                });
+            migrationBuilder.EnsureSchema(
+                name: "public");
+
+            migrationBuilder.CreateSequence(
+                name: "SEQ_HABILIDADES",
+                schema: "public",
+                incrementBy: 10);
 
             migrationBuilder.CreateTable(
                 name: "EMPRESAS",
                 columns: table => new
                 {
-                    id_empresa = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
-                    cnpj = table.Column<string>(type: "NVARCHAR2(14)", maxLength: 14, nullable: false),
-                    email = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
-                    senha = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
-                    refresh_token = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: true),
-                    expira_refresh_token = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: true)
+                    id_empresa = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    cnpj = table.Column<string>(type: "character varying(14)", maxLength: 14, nullable: false),
+                    email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    senha = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    refresh_token = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    expira_refresh_token = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -51,9 +42,10 @@ namespace JobFitScoreAPI.Migrations
                 name: "HABILIDADES",
                 columns: table => new
                 {
-                    id_habilidade = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false)
+                    id_habilidade = table.Column<int>(type: "integer", nullable: false),
+                    nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    categoria = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    descricao = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -64,13 +56,13 @@ namespace JobFitScoreAPI.Migrations
                 name: "USUARIOS",
                 columns: table => new
                 {
-                    id_usuario = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
-                    email = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
-                    senha = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
-                    refresh_token = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: true),
-                    expira_refresh_token = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: true)
+                    id_usuario = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    nome = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    senha = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    refresh_token = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    expira_refresh_token = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -81,10 +73,10 @@ namespace JobFitScoreAPI.Migrations
                 name: "VAGAS",
                 columns: table => new
                 {
-                    id_vaga = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    titulo = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
-                    empresa_id = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                    id_vaga = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    titulo = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    empresa_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -101,12 +93,14 @@ namespace JobFitScoreAPI.Migrations
                 name: "CURSOS",
                 columns: table => new
                 {
-                    id_curso = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome = table.Column<string>(type: "NVARCHAR2(150)", maxLength: 150, nullable: false),
-                    instituicao = table.Column<string>(type: "NVARCHAR2(150)", maxLength: 150, nullable: true),
-                    carga_horaria = table.Column<int>(type: "NUMBER(10)", nullable: true),
-                    usuario_id = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                    id_curso = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    nome = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    instituicao = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    carga_horaria = table.Column<int>(type: "integer", nullable: true),
+                    data_conclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    descricao = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    usuario_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,9 +117,9 @@ namespace JobFitScoreAPI.Migrations
                 name: "USUARIO_HABILIDADE",
                 columns: table => new
                 {
-                    usuario_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    habilidade_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    id_usuario_habilidade = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                    usuario_id = table.Column<int>(type: "integer", nullable: false),
+                    habilidade_id = table.Column<int>(type: "integer", nullable: false),
+                    id_usuario_habilidade = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -148,12 +142,12 @@ namespace JobFitScoreAPI.Migrations
                 name: "CANDIDATURAS",
                 columns: table => new
                 {
-                    id_candidatura = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    usuario_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    vaga_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    data_candidatura = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
-                    status = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false)
+                    id_candidatura = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    usuario_id = table.Column<int>(type: "integer", nullable: false),
+                    vaga_id = table.Column<int>(type: "integer", nullable: false),
+                    data_candidatura = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -176,9 +170,9 @@ namespace JobFitScoreAPI.Migrations
                 name: "VAGA_HABILIDADE",
                 columns: table => new
                 {
-                    vaga_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    habilidade_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    id_vaga_habilidade = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                    vaga_id = table.Column<int>(type: "integer", nullable: false),
+                    habilidade_id = table.Column<int>(type: "integer", nullable: false),
+                    id_vaga_habilidade = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -232,9 +226,6 @@ namespace JobFitScoreAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AUDITORIA_LOG");
-
-            migrationBuilder.DropTable(
                 name: "CANDIDATURAS");
 
             migrationBuilder.DropTable(
@@ -257,6 +248,10 @@ namespace JobFitScoreAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "EMPRESAS");
+
+            migrationBuilder.DropSequence(
+                name: "SEQ_HABILIDADES",
+                schema: "public");
         }
     }
 }

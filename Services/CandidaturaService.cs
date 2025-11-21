@@ -30,7 +30,6 @@ namespace JobFitScoreAPI.Services
             if (usuario == null || vaga == null)
                 throw new Exception("Usuário ou vaga não encontrada.");
 
-            // Verificar se já existe candidatura
             var candidaturas = await _candidaturaRepository.GetAllAsync();
             if (candidaturas.Any(c => c.UsuarioId == usuarioId && c.VagaId == vagaId))
                  throw new Exception("Usuário já candidatado a esta vaga.");
