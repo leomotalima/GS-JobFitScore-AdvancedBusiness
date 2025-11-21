@@ -278,6 +278,17 @@ A API estará disponível em: ** [http://localhost:5142/swagger/index.html](http
 
 ---
 
+# Usuarios para o JWT
+
+| Email              | Senha       | Tipo       |
+|--------------------|------------|-----------|
+| admin@jobfitscore.com  | admin   | admin   |
+| maria@email.com   | maria   | usuario     |
+| contato@beta.com   | beta   | empresa   |
+
+
+---
+
 ## Estrutura do Projeto
 
 ```
