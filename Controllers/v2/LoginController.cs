@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
@@ -40,6 +41,7 @@ namespace JobFitScoreAPI.Controllers.v2
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
+        [AllowAnonymous]
         [HttpPost(Name = "Login")]
         [SwaggerOperation(Summary = "Autentica um usuário ou empresa", Description = "Valida credenciais e retorna um token JWT e Refresh Token.")]
         public async Task<IActionResult> Autenticar([FromBody] UsuarioLoginInput input)
@@ -105,6 +107,7 @@ namespace JobFitScoreAPI.Controllers.v2
             return Unauthorized(ApiResponse<string>.Fail("Usuário ou senha inválidos."));
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh", Name = "RefreshToken")]
         [SwaggerOperation(Summary = "Renova o token JWT", Description = "Gera novo access token usando um refresh token válido.")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenInput input)
