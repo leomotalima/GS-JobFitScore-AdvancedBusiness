@@ -6,29 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace JobFitScoreAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "AUDITORIA_LOG",
-                columns: table => new
-                {
-                    id_auditoria = table.Column<int>(type: "NUMBER(10)", nullable: false)
-                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome_tabela = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    operacao = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
-                    registro_id = table.Column<int>(type: "NUMBER(10)", nullable: true),
-                    usuario_banco = table.Column<string>(type: "NVARCHAR2(2000)", nullable: true),
-                    data_operacao = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
-                    detalhe = table.Column<string>(type: "NVARCHAR2(2000)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AUDITORIA_LOG", x => x.id_auditoria);
-                });
-
             migrationBuilder.CreateTable(
                 name: "EMPRESAS",
                 columns: table => new
@@ -53,7 +35,9 @@ namespace JobFitScoreAPI.Migrations
                 {
                     id_habilidade = table.Column<int>(type: "NUMBER(10)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    nome = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false)
+                    nome = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
+                    categoria = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: true),
+                    descricao = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -106,6 +90,8 @@ namespace JobFitScoreAPI.Migrations
                     nome = table.Column<string>(type: "NVARCHAR2(150)", maxLength: 150, nullable: false),
                     instituicao = table.Column<string>(type: "NVARCHAR2(150)", maxLength: 150, nullable: true),
                     carga_horaria = table.Column<int>(type: "NUMBER(10)", nullable: true),
+                    data_conclusao = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: true),
+                    descricao = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     usuario_id = table.Column<int>(type: "NUMBER(10)", nullable: false)
                 },
                 constraints: table =>
@@ -123,13 +109,14 @@ namespace JobFitScoreAPI.Migrations
                 name: "USUARIO_HABILIDADE",
                 columns: table => new
                 {
-                    usuario_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    habilidade_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
                     id_usuario_habilidade = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    usuario_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
+                    habilidade_id = table.Column<int>(type: "NUMBER(10)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_USUARIO_HABILIDADE", x => new { x.usuario_id, x.habilidade_id });
+                    table.PrimaryKey("PK_USUARIO_HABILIDADE", x => x.id_usuario_habilidade);
                     table.ForeignKey(
                         name: "FK_USUARIO_HABILIDADE_HABILIDADES_habilidade_id",
                         column: x => x.habilidade_id,
@@ -176,13 +163,14 @@ namespace JobFitScoreAPI.Migrations
                 name: "VAGA_HABILIDADE",
                 columns: table => new
                 {
-                    vaga_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
-                    habilidade_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
                     id_vaga_habilidade = table.Column<int>(type: "NUMBER(10)", nullable: false)
+                        .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
+                    vaga_id = table.Column<int>(type: "NUMBER(10)", nullable: false),
+                    habilidade_id = table.Column<int>(type: "NUMBER(10)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VAGA_HABILIDADE", x => new { x.vaga_id, x.habilidade_id });
+                    table.PrimaryKey("PK_VAGA_HABILIDADE", x => x.id_vaga_habilidade);
                     table.ForeignKey(
                         name: "FK_VAGA_HABILIDADE_HABILIDADES_habilidade_id",
                         column: x => x.habilidade_id,
@@ -218,9 +206,19 @@ namespace JobFitScoreAPI.Migrations
                 column: "habilidade_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_USUARIO_HABILIDADE_usuario_id",
+                table: "USUARIO_HABILIDADE",
+                column: "usuario_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_VAGA_HABILIDADE_habilidade_id",
                 table: "VAGA_HABILIDADE",
                 column: "habilidade_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VAGA_HABILIDADE_vaga_id",
+                table: "VAGA_HABILIDADE",
+                column: "vaga_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VAGAS_empresa_id",
@@ -231,9 +229,6 @@ namespace JobFitScoreAPI.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AUDITORIA_LOG");
-
             migrationBuilder.DropTable(
                 name: "CANDIDATURAS");
 

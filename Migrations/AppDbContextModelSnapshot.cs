@@ -22,46 +22,6 @@ namespace JobFitScoreAPI.Migrations
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("JobFitScoreAPI.Models.AuditoriaLog", b =>
-                {
-                    b.Property<int>("IdAuditoria")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
-                        .HasColumnName("id_auditoria");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdAuditoria"));
-
-                    b.Property<DateTime>("DataOperacao")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("data_operacao");
-
-                    b.Property<string>("Detalhe")
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("detalhe");
-
-                    b.Property<string>("NomeTabela")
-                        .IsRequired()
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("nome_tabela");
-
-                    b.Property<string>("Operacao")
-                        .IsRequired()
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("operacao");
-
-                    b.Property<int?>("RegistroId")
-                        .HasColumnType("NUMBER(10)")
-                        .HasColumnName("registro_id");
-
-                    b.Property<string>("UsuarioBanco")
-                        .HasColumnType("NVARCHAR2(2000)")
-                        .HasColumnName("usuario_banco");
-
-                    b.HasKey("IdAuditoria");
-
-                    b.ToTable("AUDITORIA_LOG", (string)null);
-                });
-
             modelBuilder.Entity("JobFitScoreAPI.Models.Candidatura", b =>
                 {
                     b.Property<int>("IdCandidatura")
@@ -111,6 +71,15 @@ namespace JobFitScoreAPI.Migrations
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("carga_horaria");
 
+                    b.Property<DateTime?>("DataConclusao")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("data_conclusao");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("descricao");
+
                     b.Property<string>("Instituicao")
                         .HasMaxLength(150)
                         .HasColumnType("NVARCHAR2(150)")
@@ -158,7 +127,7 @@ namespace JobFitScoreAPI.Migrations
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("expira_refresh_token");
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("NomeEmpresa")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("NVARCHAR2(100)")
@@ -189,7 +158,17 @@ namespace JobFitScoreAPI.Migrations
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdHabilidade"));
 
-                    b.Property<string>("Nome")
+                    b.Property<string>("Categoria")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("categoria");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("descricao");
+
+                    b.Property<string>("NomeHabilidade")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("NVARCHAR2(100)")
@@ -243,21 +222,26 @@ namespace JobFitScoreAPI.Migrations
 
             modelBuilder.Entity("JobFitScoreAPI.Models.UsuarioHabilidade", b =>
                 {
-                    b.Property<int>("UsuarioId")
+                    b.Property<int>("IdUsuarioHabilidade")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("NUMBER(10)")
-                        .HasColumnName("usuario_id");
+                        .HasColumnName("id_usuario_habilidade");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuarioHabilidade"));
 
                     b.Property<int>("HabilidadeId")
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("habilidade_id");
 
-                    b.Property<int>("IdUsuarioHabilidade")
+                    b.Property<int>("UsuarioId")
                         .HasColumnType("NUMBER(10)")
-                        .HasColumnName("id_usuario_habilidade");
+                        .HasColumnName("usuario_id");
 
-                    b.HasKey("UsuarioId", "HabilidadeId");
+                    b.HasKey("IdUsuarioHabilidade");
 
                     b.HasIndex("HabilidadeId");
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("USUARIO_HABILIDADE", (string)null);
                 });
@@ -290,21 +274,26 @@ namespace JobFitScoreAPI.Migrations
 
             modelBuilder.Entity("JobFitScoreAPI.Models.VagaHabilidade", b =>
                 {
-                    b.Property<int>("VagaId")
+                    b.Property<int>("IdVagaHabilidade")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("NUMBER(10)")
-                        .HasColumnName("vaga_id");
+                        .HasColumnName("id_vaga_habilidade");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdVagaHabilidade"));
 
                     b.Property<int>("HabilidadeId")
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("habilidade_id");
 
-                    b.Property<int>("IdVagaHabilidade")
+                    b.Property<int>("VagaId")
                         .HasColumnType("NUMBER(10)")
-                        .HasColumnName("id_vaga_habilidade");
+                        .HasColumnName("vaga_id");
 
-                    b.HasKey("VagaId", "HabilidadeId");
+                    b.HasKey("IdVagaHabilidade");
 
                     b.HasIndex("HabilidadeId");
+
+                    b.HasIndex("VagaId");
 
                     b.ToTable("VAGA_HABILIDADE", (string)null);
                 });

@@ -4,6 +4,7 @@ using Asp.Versioning;
 using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
+using JobFitScoreAPI.Services;
 using JobFitScoreAPI.Dtos.Empresa;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -20,12 +21,14 @@ public class EmpresaController : ControllerBase
 {
 private readonly AppDbContext _context;
 private readonly LinkGenerator _linkGenerator;
+private readonly ICryptoService _crypto;
 
 
-    public EmpresaController(AppDbContext context, LinkGenerator linkGenerator)  
+    public EmpresaController(AppDbContext context, LinkGenerator linkGenerator, ICryptoService crypto)  
     {  
         _context = context;  
-        _linkGenerator = linkGenerator;  
+        _linkGenerator = linkGenerator;
+        _crypto = crypto;  
     }  
 
     // Classe de resposta padronizada  
@@ -61,7 +64,7 @@ private readonly LinkGenerator _linkGenerator;
             .Select(e => new EmpresaOutput  
             {  
                 IdEmpresa = e.IdEmpresa,  
-                Nome = e.NomeEmpresa,  // CORRIGIDO  
+                Nome = e.NomeEmpresa,  
                 Cnpj = e.Cnpj,  
                 Email = e.Email  
             })  
@@ -113,6 +116,7 @@ private readonly LinkGenerator _linkGenerator;
     }  
 
     // POST - Criar empresa  
+    [AllowAnonymous]  
     [HttpPost(Name = "CreateEmpresa")]  
     [SwaggerOperation(Summary = "Cria uma nova empresa", Description = "Adiciona uma nova empresa no sistema.")]  
     [SwaggerResponse(StatusCodes.Status201Created, "Empresa criada com sucesso")]  
@@ -122,13 +126,16 @@ private readonly LinkGenerator _linkGenerator;
         if (input == null)  
             return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));  
 
-        var empresa = new Empresa  
-        {  
-            NomeEmpresa = input.Nome,  // CORRIGIDO  
-            Cnpj = input.Cnpj,  
-            Email = input.Email,  
-            Senha = input.Senha ?? string.Empty  
-        };  
+        if (string.IsNullOrWhiteSpace(input.Senha))
+    return BadRequest(ApiResponse<string>.Fail("Senha é obrigatória."));
+
+        var empresa = new Empresa
+        {
+            NomeEmpresa = input.Nome,
+            Cnpj = input.Cnpj,
+            Email = input.Email,
+            Senha = _crypto.HashPassword(input.Senha)
+        };
 
         _context.Empresas.Add(empresa);  
         await _context.SaveChangesAsync();  
@@ -146,36 +153,39 @@ private readonly LinkGenerator _linkGenerator;
     }  
 
     // PUT - Atualizar empresa  
-    [HttpPut("{id}", Name = "UpdateEmpresa")]  
-    [SwaggerOperation(Summary = "Atualiza uma empresa existente", Description = "Modifica informações de uma empresa.")]  
-    [SwaggerResponse(StatusCodes.Status200OK, "Empresa atualizada com sucesso")]  
-    [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro de validação ou dados inválidos")]  
-    [SwaggerResponse(StatusCodes.Status404NotFound, "Empresa não encontrada")]  
-    public async Task<IActionResult> UpdateEmpresa(int id, [FromBody] EmpresaUpdateInput input)  
-    {  
-        if (input == null)  
-            return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));  
+    [HttpPut("{id}", Name = "UpdateEmpresa")]
+    [SwaggerOperation(Summary = "Atualiza uma empresa existente", Description = "Modifica informações de uma empresa.")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Empresa atualizada com sucesso")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Erro de validação ou dados inválidos")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Empresa não encontrada")]
+    public async Task<IActionResult> UpdateEmpresa(int id, [FromBody] EmpresaUpdateInput input)
+    {
+        if (input == null)
+            return BadRequest(ApiResponse<string>.Fail("Input não pode ser nulo."));
 
-        var empresa = await _context.Empresas.FindAsync(id);  
-        if (empresa == null)  
-            return NotFound(ApiResponse<string>.Fail("Empresa não encontrada."));  
+        var empresa = await _context.Empresas.FindAsync(id);
+        if (empresa == null)
+            return NotFound(ApiResponse<string>.Fail("Empresa não encontrada."));
 
-        empresa.NomeEmpresa = input.Nome ?? empresa.NomeEmpresa;  // CORRIGIDO  
-        empresa.Email = input.Email ?? empresa.Email;  
+        empresa.NomeEmpresa = input.Nome ?? empresa.NomeEmpresa;
+        empresa.Email = input.Email ?? empresa.Email;
 
-        _context.Entry(empresa).State = EntityState.Modified;  
-        await _context.SaveChangesAsync();  
+        if (!string.IsNullOrWhiteSpace(input.Senha))
+            empresa.Senha = _crypto.HashPassword(input.Senha);
 
-        var output = new EmpresaOutput  
-        {  
-            IdEmpresa = empresa.IdEmpresa,  
-            Nome = empresa.NomeEmpresa,  // CORRIGIDO  
-            Cnpj = empresa.Cnpj,  
-            Email = empresa.Email  
-        };  
+        await _context.SaveChangesAsync();
 
-        return Ok(ApiResponse<EmpresaOutput>.Ok(output, "Empresa atualizada com sucesso."));  
-    }  
+        var output = new EmpresaOutput
+        {
+            IdEmpresa = empresa.IdEmpresa,
+            Nome = empresa.NomeEmpresa,
+            Cnpj = empresa.Cnpj,
+            Email = empresa.Email
+        };
+
+        return Ok(ApiResponse<EmpresaOutput>.Ok(output, "Empresa atualizada com sucesso."));
+    }
+
 
     // DELETE - Remover empresa  
     [HttpDelete("{id}", Name = "DeleteEmpresa")]  

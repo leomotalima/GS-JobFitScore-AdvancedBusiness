@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using JobFitScoreAPI.Data;
 using JobFitScoreAPI.Models;
 using JobFitScoreAPI.Dtos.Usuario;
+using JobFitScoreAPI.Services;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace JobFitScoreAPI.Controllers.v1
@@ -20,12 +21,16 @@ namespace JobFitScoreAPI.Controllers.v1
     {
         private readonly AppDbContext _context;
         private readonly LinkGenerator _linkGenerator;
+        private readonly ICryptoService _crypto;
 
-        public UsuarioController(AppDbContext context, LinkGenerator linkGenerator)
+
+        public UsuarioController(AppDbContext context, LinkGenerator linkGenerator, ICryptoService crypto)
         {
             _context = context;
             _linkGenerator = linkGenerator;
+            _crypto = crypto;
         }
+
 
         // Classe de resposta padronizada
         public class ApiResponse<T>
@@ -137,7 +142,7 @@ namespace JobFitScoreAPI.Controllers.v1
             {
                 Nome = input.Nome,
                 Email = input.Email,
-                Senha = input.Senha
+                Senha = _crypto.HashPassword(input.Senha)
             };
 
             _context.Usuarios.Add(usuario);
@@ -170,7 +175,9 @@ namespace JobFitScoreAPI.Controllers.v1
 
             usuario.Nome = input.Nome ?? usuario.Nome;
             usuario.Email = input.Email ?? usuario.Email;
-            usuario.Senha = input.Senha ?? usuario.Senha;
+
+            if (!string.IsNullOrWhiteSpace(input.Senha))
+                usuario.Senha = _crypto.HashPassword(input.Senha);
 
             await _context.SaveChangesAsync();
 
@@ -183,6 +190,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
             return Ok(ApiResponse<UsuarioOutput>.Ok(output, "Usuário atualizado com sucesso."));
         }
+
 
         // DELETE - Remover usuário
         [HttpDelete("{id}", Name = "DeleteUsuario")]
