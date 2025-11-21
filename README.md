@@ -233,6 +233,7 @@ Execute os seguintes comandos no terminal:
 ```bash
 # Instalar Entity Framework CLI globalmente (se ainda não tiver)
 dotnet tool install --global dotnet-ef --version 8.0
+# --version 9.0 / --version 8.0 / --version 7.0 (versões estáveis)
 
 # Restaurar pacotes NuGet
 dotnet restore
@@ -427,7 +428,6 @@ SELECT * FROM "Usuarios" LIMIT 10;
 ├── Controllers
 │   ├── v1
 │   └── v2
-│
 ├── Data
 │   └── AppDbContext.cs
 ├── Dtos
