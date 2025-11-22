@@ -17,6 +17,8 @@
 API RESTful desenvolvida em <b>.NET 8</b> para o cálculo de compatibilidade profissional entre candidatos e vagas, 
 utilizando análise de habilidades e requisitos com base em técnicas de <b>inteligência computacional</b>.
 
+[![Ver Demonstração](https://img.shields.io/badge/YouTube-Ver%20Demonstração-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=UPBSy_l2NPQ)
+
 ---
 
 <p align="center">
@@ -32,12 +34,10 @@ utilizando análise de habilidades e requisitos com base em técnicas de <b>inte
 
 ---
 
-## 🌐 URLs de Acesso
-
-- **API Base URL:** https://gs-jobfitscore-advancedbusiness.onrender.com
-- **Documentação Swagger:** https://gs-jobfitscore-advancedbusiness.onrender.com/swagger
-- **Health Check:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health
-- **Health Ping:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health/ping
+| Branch | Banco de Dados
+|--------|-----|
+| **🚀 Deploy** | PostgreSQL | 
+| **💻 Main** | Oracle SQL | 
 
 ---
 
@@ -187,7 +187,8 @@ O **JobFitScore** utiliza lógica ponderada (e futura integração com ML.NET) p
 | **JWT Bearer** | Autenticação e segurança |
 | **xUnit** | Testes de unidade e integração |
 | **HATEOAS** | Navegação via links semânticos |
-| **Oracle / InMemory** | Suporte a múltiplos bancos de dados |
+| **Oracle / InMemory** | Suporte a múltiplos bancos de dados local |
+| **PostgreSQL** | Banco de dados Deploy |
 
 ---
 
@@ -198,6 +199,9 @@ Antes de executar o projeto, certifique-se de ter instalado:
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Oracle Database](https://www.oracle.com/database/technologies/oracle-database-software-downloads.html)
 - [Oracle SQL Developer para VSCode](https://marketplace.visualstudio.com/items?itemName=Oracle.sql-developer)
+- **Database Client** (Extensão para consultar o banco de dados do Deploy) 
+  - [Database Client](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2)
+  - [Database Client JDBC](https://marketplace.visualstudio.com/items?itemName=cweijan.dbclient-jdbc)
 
 ---
 
@@ -233,7 +237,6 @@ Execute os seguintes comandos no terminal:
 ```bash
 # Instalar Entity Framework CLI globalmente (se ainda não tiver)
 dotnet tool install --global dotnet-ef --version 8.0
-# --version 9.0 / --version 8.0 / --version 7.0 (versões estáveis)
 
 # Restaurar pacotes NuGet
 dotnet restore
@@ -247,35 +250,7 @@ dotnet ef database update
 
 ---
 
-### 4️⃣ Popular o banco de dados com dados iniciais
-
-Após aplicar as migrations, execute o script SQL para inserir os dados iniciais:
-
-**Opção 1: Usando Oracle SQL Developer para VSCode**
-
-1. Instale a extensão [Oracle SQL Developer](https://marketplace.visualstudio.com/items?itemName=Oracle.sql-developer) no VSCode
-
-2. Configure uma conexão com seu banco Oracle:
-   - Abra o painel lateral do Oracle SQL Developer no VSCode
-   - Clique em "Create Connection"
-   - Preencha os dados de conexão (user, password, host, port, service)
-
-3. Abra o arquivo `Scripts/inserts.sql` no VSCode
-
-4. Execute o script:
-   - Clique com botão direito no editor → "Execute SQL"
-   - Ou use o atalho `Ctrl+Enter` (Linux/Windows) / `Cmd+Enter` (Mac)
-
-**Opção 2: Usando Oracle SQL Developer Desktop**
-
-1. Abra o Oracle SQL Developer
-2. Conecte-se ao banco de dados
-3. Abra o arquivo `Scripts/inserts.sql`
-4. Execute o script clicando no botão "Run Script" (F5)
-
----
-
-### 5️⃣ Executar a aplicação
+### 4️⃣ Executar a aplicação
 
 Execute a aplicação:
 
@@ -284,55 +259,25 @@ dotnet run
 ```
 
 A API estará disponível em: ** [http://localhost:5142/swagger/index.html](http://localhost:5142/swagger/index.html)**
-                            
 
 ---
 
-# Usuarios para o JWT
+## Execução Deploy
 
-| Email              | Senha       | Tipo       |
-|--------------------|------------|-----------|
-| admin@jobfitscore.com  | admin   | admin   |
-| maria@email.com   | maria   | usuario     |
-| contato@beta.com   | beta   | empresa   |
 
----
+## 🌐 URLs de Acesso ao Deploy
 
-## 🗄️ Acesso ao Banco de Dados PostgreSQL (Render)
+- **API Base URL:** https://gs-jobfitscore-advancedbusiness.onrender.com
+- **Documentação Swagger:** https://gs-jobfitscore-advancedbusiness.onrender.com/swagger
+- **Health Check:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health
+- **Health Ping:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health/ping
 
-### Credenciais de Acesso
+#### Conexão PostgreSQL 
 
-| Campo | Valor |
-|-------|-------|
-| **Hostname** | `dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com` |
-| **Port** | `5432` |
-| **Database** | `jobfitscore_dviy` |
-| **Username** | `rm554874` |
-| **Password** | `IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu` |
-
-**Connection String Externa:**
-```
-postgresql://rm554874:IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu@dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com/jobfitscore_dviy
-```
-
----
-
-### 📊 Como Acessar o Banco de Dados
-
-#### Opção 1: Via VSCode (Database Client) - **Recomendado para Professores**
-
-1. **Instalar extensões necessárias:**
-   - [Database Client](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2)
-   - [Database Client JDBC](https://marketplace.visualstudio.com/items?itemName=cweijan.dbclient-jdbc)
-
-2. **Conectar ao banco:**
-   - Abra o VSCode
-   - Clique no ícone do **Database Client** na barra lateral esquerda
-   - Clique em **"+ Add Connection"** ou **"Create Connection"**
-   - Selecione **"PostgreSQL"**
-
-3. **Preencher os dados de conexão:**
-
+1. Clique no ícone do **Database Client** na barra lateral do VSCode
+2. Clique em **"Create Connection"** (ícone de +)
+3. Selecione **PostgreSQL**
+4. Preencha os dados:
    ```
    Host: dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com
    Port: 5432
@@ -340,97 +285,73 @@ postgresql://rm554874:IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu@dpg-d4fsf8je5dus739eca20-
    Password: IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu
    Database: jobfitscore_dviy
    ```
-
-   **⚠️ IMPORTANTE:** Marque a opção **"Use SSL"** ou **"SSL Mode: Require"**
-
-4. **Testar conexão:**
-   - Clique em **"Test"** para validar
-   - Se bem-sucedido, clique em **"Connect"**
-
-5. **Explorar o banco:**
-   - Expanda a conexão criada
-   - Navegue pelas tabelas: `Usuarios`, `Vagas`, `Candidaturas`, `Empresas`, `Habilidades`, etc.
-   - Clique com botão direito em qualquer tabela → **"Select Top 100"** para visualizar os dados
-
----
-
-#### Opção 2: Via Terminal (psql)
-
-**Instalar o cliente PostgreSQL:**
-```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install postgresql-client
-```
-
-# macOS
-```bash
-brew install postgresql
-```
-
-# Windows
-### [Link para Download](https://www.postgresql.org/download/)
-
----
-
-**Conectar ao banco:**
-```bash
-psql postgresql://rm554874:IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu@dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com/jobfitscore_dviy
-```
-
-**Comandos úteis no psql:**
-```sql
--- Listar todas as tabelas
-\dt
-
--- Ver estrutura de uma tabela
-\d "Usuarios"
-
--- Consultar dados
-SELECT * FROM "Usuarios" LIMIT 10;
-
--- Sair
-\q
-```
-
----
-
-### 📋 Tabelas Disponíveis no Banco
-
-| Tabela | Descrição |
-|--------|-----------|
-| `Usuarios` | Dados de usuários (candidatos e empresas) |
-| `Vagas` | Vagas de emprego cadastradas |
-| `Candidaturas` | Candidaturas dos usuários às vagas |
-| `Empresas` | Informações das empresas |
-| `Habilidades` | Habilidades técnicas cadastradas |
-| `UsuarioHabilidades` | Relacionamento entre usuários e suas habilidades |
-| `VagaHabilidades` | Relacionamento entre vagas e habilidades requeridas |
-| `Cursos` | Cursos disponíveis para recomendação |
-| `__EFMigrationsHistory` | Histórico de migrations do Entity Framework |
-
----
-
-### ⚠️ Notas Importantes para Avaliação
-
-- **SSL Obrigatório:** O PostgreSQL do Render **requer conexão SSL**. Certifique-se de habilitar esta opção em qualquer ferramenta de conexão.
-- **Conexão Externa:** Use sempre o hostname com `.oregon-postgres.render.com` para acesso externo.
-- **Firewall:** O banco está configurado para aceitar conexões de qualquer IP (0.0.0.0/0).
+6. Marque a opção **SSL** (obrigatório para Render)
+7. Clique em **Connect**
 
 ---
 
 ## Estrutura do Projeto
 
 ```
+.
 ├── AppDbContextFactory.cs
 ├── appsettings.Development.json
 ├── appsettings.json
 ├── Controllers
 │   ├── v1
+│   │   ├── CandidaturaController.cs
+│   │   ├── CursoController.cs
+│   │   ├── EmpresaController.cs
+│   │   ├── HabilidadeController.cs
+│   │   ├── LoginController.cs
+│   │   ├── UsuarioController.cs
+│   │   ├── UsuarioHabilidadeController.cs
+│   │   ├── VagaController.cs
+│   │   └── VagaHabilidadeController.cs
 │   └── v2
+│       ├── CursoController.cs
+│       ├── EmpresaController.cs
+│       ├── HabilidadeController.cs
+│       ├── LoginController.cs
+│       ├── MlController.cs
+│       ├── StatusController.cs
+│       ├── UsuarioController.cs
+│       ├── UsuarioHabilidadeController.cs
+│       ├── VagaController.cs
+│       └── VagaHabilidadeController.cs
 ├── Data
 │   └── AppDbContext.cs
+├── Dockerfile
 ├── Dtos
+│   ├── Candidatura
+│   │   ├── CandidaturaInput.cs
+│   │   └── CandidaturaOutput.cs
+│   ├── Curso
+│   │   ├── CursoInput.cs
+│   │   └── CursoOutput.cs
+│   ├── Empresa
+│   │   ├── EmpresaInput.cs
+│   │   ├── EmpresaOutput.cs
+│   │   └── EmpresaUpdateInput.cs
+│   ├── Habilidade
+│   │   ├── HabilidadeInput.cs
+│   │   └── HabilidadeOutput.cs
+│   ├── Usuario
+│   │   ├── JobFitEntradaDto.cs
+│   │   ├── JobFitResultadoDto.cs
+│   │   ├── UsuarioInput.cs
+│   │   ├── UsuarioOutput.cs
+│   │   └── UsuarioUpdateInput.cs
+│   ├── UsuarioHabilidade
+│   │   ├── UsuarioHabilidadeInput.cs
+│   │   └── UsuarioHabilidadeOutput.cs
+│   ├── Vaga
+│   │   ├── VagaInput.cs
+│   │   ├── VagaOutput.cs
+│   │   └── VagaUpdateInput.cs
+│   └── VagaHabilidade
+│       ├── VagaHabilidadeInput.cs
+│       └── VagaHabilidadeOutput.cs
 ├── JobFitScoreAPI.csproj
 ├── JobFitScore.Tests
 │   ├── appsettings.Testing.json
@@ -443,22 +364,61 @@ SELECT * FROM "Usuarios" LIMIT 10;
 │   ├── JobFitScore.Tests.csproj
 │   └── Unit
 ├── Migrations
+│   ├── 20251121012808_InitialCreate.cs
+│   ├── 20251121012808_InitialCreate.Designer.cs
+│   └── AppDbContextModelSnapshot.cs
 ├── Models
+│   ├── Candidatura.cs
+│   ├── Curso.cs
+│   ├── Empresa.cs
+│   ├── Habilidade.cs
+│   ├── HashHelper.cs
+│   ├── JobFitData.cs
+│   ├── UsuarioConfiguration.cs
+│   ├── Usuario.cs
+│   ├── UsuarioHabilidade.cs
+│   ├── UsuarioLogin.cs
+│   ├── Vaga.cs
+│   └── VagaHabilidade.cs
 ├── Program.cs
 ├── Properties
 │   └── launchSettings.json
 ├── README.md
 ├── Repositories
+│   ├── CandidaturaRepository.cs
+│   ├── EmpresaRepository.cs
+│   ├── HabilidadeRepository.cs
+│   ├── ICandidaturaRepository.cs
+│   ├── IEmpresaRepository.cs
+│   ├── IHabilidadeRepository.cs
+│   ├── IUsuarioRepository.cs
+│   ├── IVagaRepository.cs
+│   ├── UsuarioRepository.cs
+│   └── VagaRepository.cs
 ├── Scripts
-│   ├── inserts.sql
 │   ├── ml_jobfitscore.csv
 │   └── remover-todas-tabelas.sql
 ├── Services
+│   ├── CandidaturaService.cs
+│   ├── CryptoService.cs
+│   ├── CursoService.cs
+│   ├── EmpresaService.cs
+│   ├── HabilidadeService.cs
+│   ├── ICryptoService.cs
+│   ├── IVagaService.cs
+│   ├── JobFitMLService.cs
+│   ├── JwtService.cs
+│   ├── UsuarioHabilidadeService.cs
+│   ├── UsuarioService.cs
+│   ├── VagaHabilidadeService.cs
+│   └── VagaService.cs
 ├── Static
 │   └── images
 │       └── logo.png
 └── Swagger
-    └── SwaggerFilters.cs
+    ├── OrdenarTagsDocumentFilter.cs
+    ├── SwaggerAllowAnonymousFilter.cs
+    └── SwaggerSecurityRequirementsFilter.cs
 ```
 
 ---
