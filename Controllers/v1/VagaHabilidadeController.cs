@@ -10,6 +10,9 @@ namespace JobFitScoreAPI.Controllers.v1
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [Tags("VagaHabilidade")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     public class VagaHabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;

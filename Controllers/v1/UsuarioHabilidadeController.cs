@@ -12,7 +12,7 @@ namespace JobFitScoreAPI.Controllers.v1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/usuario-habilidade")]
-    [Tags("Usuários Habilidades")]
+    [Tags("UsuariosHabilidades")]
     [Produces("application/json")]
     [Consumes("application/json")]
     [Authorize]
