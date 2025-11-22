@@ -179,6 +179,15 @@ builder.Services.AddOpenTelemetry()
     });
 
 // ----------------------
+// Serviços de Oracle
+// ----------------------
+// ----------------------
+// Serviços de Oracle
+// ----------------------
+builder.Services.AddScoped<OracleProcedureService>(_ => 
+    new OracleProcedureService(connectionString ?? throw new InvalidOperationException("Connection string não pode ser nula")));
+
+// ----------------------
 // Build
 // ----------------------
 var app = builder.Build();
