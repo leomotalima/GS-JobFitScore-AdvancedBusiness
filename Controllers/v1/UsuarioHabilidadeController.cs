@@ -15,7 +15,7 @@ namespace JobFitScoreAPI.Controllers.v1
     [Tags("UsuariosHabilidades")]
     [Produces("application/json")]
     [Consumes("application/json")]
-    [Authorize]
+    //[Authorize]
     public class UsuarioHabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;

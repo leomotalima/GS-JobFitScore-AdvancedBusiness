@@ -98,17 +98,11 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+/// ----------------------
+// JWT Service (mantido para compatibilidade)
 // ----------------------
-// JWT
-// ----------------------
-var key = Encoding.UTF8.GetBytes(
-    builder.Environment.EnvironmentName == "Testing"
-        ? "testing_key_123"
-        : builder.Configuration["Jwt:Key"] ?? "default_key_12345"
-);
-
 var jwtKey = builder.Configuration["Jwt:Key"] 
-             ?? "ChaveSuperUltraMegaSeguraComMaisDe32Caracteres_123456";
+    ?? "ChaveSuperUltraMegaSeguraComMaisDe32Caracteres_123456";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "JobFitScore";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "JobFitScoreUsers";
 var jwtExpireMinutes = 120;
@@ -119,18 +113,30 @@ builder.Services.AddSingleton(sp => new JwtService(
     jwtAudience,
     jwtExpireMinutes
 ));
+
+// ----------------------
+// Authentication/Authorization - DESATIVADO
+// ----------------------
+/*
+var key = Encoding.UTF8.GetBytes(
+    builder.Environment.EnvironmentName == "Testing"
+? "testing_key_123"
+: builder.Configuration["Jwt:Key"] ?? "default_key_12345"
+);
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(opt =>
+.AddJwtBearer(opt =>
+{
+    opt.TokenValidationParameters = new TokenValidationParameters
     {
-        opt.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key)
-        };
-    });
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+*/
 
 // ----------------------
 // Swagger
@@ -140,7 +146,8 @@ builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "JobFitScore API", Version = "v1" });
     opt.SwaggerDoc("v2", new OpenApiInfo { Title = "JobFitScore API", Version = "v2" });
-
+    
+    /*
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -150,9 +157,10 @@ builder.Services.AddSwaggerGen(opt =>
         In = ParameterLocation.Header,
         Description = "Insira o token JWT(tokenAcesso)"
     });
-
     opt.OperationFilter<SwaggerSecurityRequirementsFilter>();
     opt.OperationFilter<SwaggerAllowAnonymousFilter>();
+    */
+    
     opt.DocumentFilter<OrdenarTagsDocumentFilter>();
     opt.EnableAnnotations();
 });
@@ -223,7 +231,7 @@ app.MapGet("/", context =>
 });
 
 // ----------------------
-// Auth
+// Auth 
 // ----------------------
 app.UseAuthentication();
 app.UseAuthorization();
