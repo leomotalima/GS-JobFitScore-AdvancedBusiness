@@ -12,7 +12,6 @@ namespace JobFitScoreAPI.Controllers.v1
     [Route("api/v{version:apiVersion}/vagas")]
     [Tags("Vagas")]
     [Produces("application/json")]
-    [Consumes("application/json")]
     public class VagaController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -71,6 +70,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // POST: api/v1/vagas
         [HttpPost]
+        [Consumes("application/json")]
         [SwaggerOperation(Summary = "Cria uma nova vaga")]
         [SwaggerResponse(StatusCodes.Status201Created, "Vaga criada com sucesso")]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Dados inválidos")]
@@ -92,6 +92,7 @@ namespace JobFitScoreAPI.Controllers.v1
 
         // PUT: api/v1/vagas/{id}
         [HttpPut("{id}")]
+        [Consumes("application/json")]
         [SwaggerOperation(Summary = "Atualiza uma vaga existente")]
         [SwaggerResponse(StatusCodes.Status200OK, "Vaga atualizada com sucesso")]
         [SwaggerResponse(StatusCodes.Status404NotFound, "Vaga não encontrada")]
