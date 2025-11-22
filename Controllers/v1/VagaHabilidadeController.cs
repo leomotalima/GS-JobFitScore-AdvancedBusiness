@@ -10,6 +10,9 @@ namespace JobFitScoreAPI.Controllers.v1
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [Tags("VagaHabilidade")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
     public class VagaHabilidadeController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -21,6 +24,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
+        // GET: api/v1/vagahabilidade?page=1&pageSize=10
         [HttpGet]
         [SwaggerOperation(Summary = "Lista todas as relações Vaga-Habilidade")]
         [SwaggerResponse(StatusCodes.Status200OK, "Relações retornadas com sucesso")]
@@ -64,6 +68,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
+        // GET: api/v1/vagahabilidade/{id}
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Obtém uma relação Vaga-Habilidade específica")]
         [SwaggerResponse(StatusCodes.Status200OK, "Relação encontrada com sucesso")]
@@ -93,6 +98,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(result);
         }
 
+        // POST: api/v1/vagahabilidade
         [HttpPost]
         [SwaggerOperation(Summary = "Cria uma nova relação Vaga-Habilidade")]
         [SwaggerResponse(StatusCodes.Status201Created, "Relação criada com sucesso")]
@@ -122,6 +128,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Created(url, result);
         }
 
+        // PUT: api/v1/vagahabilidade/{id}
         [HttpPut("{id}")]
         [SwaggerOperation(Summary = "Atualiza uma relação Vaga-Habilidade")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Relação atualizada com sucesso")]
@@ -144,6 +151,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
+        // DELETE: api/v1/vagahabilidade/{id}
         [HttpDelete("{id}")]
         [SwaggerOperation(Summary = "Remove uma relação Vaga-Habilidade")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Relação removida com sucesso")]
@@ -160,6 +168,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return NoContent();
         }
 
+        // MÉTODOS AUXILIARES HATEOAS
         private string GetByIdUrl(int id) =>
             _linkGenerator.GetUriByAction(HttpContext, nameof(GetById), "VagaHabilidade", new { id }) ?? string.Empty;
 

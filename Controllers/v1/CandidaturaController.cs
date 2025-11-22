@@ -27,7 +27,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _linkGenerator = linkGenerator;
         }
 
-
+        // Classe de resposta padronizada
         public class ApiResponse<T>
         {
             public bool Success { get; set; }
@@ -41,6 +41,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 new ApiResponse<T> { Success = false, Message = message };
         }
 
+        // GET - Listar candidaturas
         [HttpGet(Name = "GetCandidaturas")]
         [SwaggerOperation(Summary = "Lista todas as candidaturas", Description = "Retorna uma lista paginada de candidaturas.")]
         [SwaggerResponse(StatusCodes.Status200OK, "Lista de candidaturas retornada com sucesso")]
@@ -78,6 +79,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<object>.Ok(new { meta, data = candidaturas }, "Candidaturas listadas com sucesso."));
         }
 
+        // GET - Buscar candidatura por ID
         [HttpGet("{id}", Name = "GetCandidatura")]
         [SwaggerOperation(Summary = "Obtém uma candidatura específica", Description = "Retorna os detalhes de uma candidatura pelo ID.")]
         [SwaggerResponse(StatusCodes.Status200OK, "Candidatura encontrada com sucesso")]
@@ -103,6 +105,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<CandidaturaOutput>.Ok(candidatura, "Candidatura encontrada com sucesso."));
         }
 
+        // POST - Criar candidatura
         [HttpPost(Name = "CreateCandidatura")]
         [SwaggerOperation(Summary = "Cria uma nova candidatura", Description = "Adiciona uma nova candidatura no sistema.")]
         [SwaggerResponse(StatusCodes.Status201Created, "Candidatura criada com sucesso")]
@@ -137,6 +140,7 @@ namespace JobFitScoreAPI.Controllers.v1
                 ApiResponse<CandidaturaOutput>.Ok(output, "Candidatura criada com sucesso."));
         }
 
+        // PUT - Atualizar candidatura
         [HttpPut("{id}", Name = "UpdateCandidatura")]
         [SwaggerOperation(Summary = "Atualiza uma candidatura existente", Description = "Modifica informações de uma candidatura.")]
         [SwaggerResponse(StatusCodes.Status200OK, "Candidatura atualizada com sucesso")]
@@ -170,6 +174,7 @@ namespace JobFitScoreAPI.Controllers.v1
             return Ok(ApiResponse<CandidaturaOutput>.Ok(output, "Candidatura atualizada com sucesso."));
         }
 
+        // DELETE - Remover candidatura
         [HttpDelete("{id}", Name = "DeleteCandidatura")]
         [SwaggerOperation(Summary = "Remove uma candidatura", Description = "Exclui uma candidatura cadastrada do sistema.")]
         [SwaggerResponse(StatusCodes.Status204NoContent, "Candidatura removida com sucesso")]
@@ -183,7 +188,7 @@ namespace JobFitScoreAPI.Controllers.v1
             _context.Candidaturas.Remove(candidatura);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return NoContent(); // 204
         }
     }
 }

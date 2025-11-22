@@ -14,7 +14,7 @@ namespace JobFitScoreAPI.Controllers.v1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/login")]
-    [Tags("Autenticação")]
+    [Tags("Autenticacao")]
     [Produces("application/json")]
     [Consumes("application/json")]
     public class LoginController : ControllerBase

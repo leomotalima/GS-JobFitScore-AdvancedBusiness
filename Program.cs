@@ -153,6 +153,7 @@ builder.Services.AddSwaggerGen(opt =>
 
     opt.OperationFilter<SwaggerSecurityRequirementsFilter>();
     opt.OperationFilter<SwaggerAllowAnonymousFilter>();
+    opt.DocumentFilter<OrdenarTagsDocumentFilter>();
     opt.EnableAnnotations();
 });
 
