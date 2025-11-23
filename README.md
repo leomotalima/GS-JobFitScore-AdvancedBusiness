@@ -216,6 +216,7 @@ Antes de executar o projeto, certifique-se de ter instalado:
 ```bash
 git clone https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness.git
 cd GS-JobFitScore-AdvancedBusiness
+git checkout database
 ```
 ---
 
