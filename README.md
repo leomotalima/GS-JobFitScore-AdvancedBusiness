@@ -21,7 +21,7 @@
 API RESTful desenvolvida em <b>.NET 8</b> para o cálculo de compatibilidade profissional entre candidatos e vagas, 
 utilizando análise de habilidades e requisitos com base em técnicas de <b>inteligência computacional</b>.
 
-[![Ver Demonstração](https://img.shields.io/badge/YouTube-Ver%20Integração-red?style=for-the-badge&logo=youtube)](https://youtu.be/EkkzUF8Y0Cc)
+[![Ver Integração .NET](https://img.shields.io/badge/YouTube-Ver%20Integração%20.NET-red?style=for-the-badge&logo=youtube)](https://youtu.be/EkkzUF8Y0Cc)
 
 ---
 
