@@ -1,3 +1,7 @@
+# ESTE REPOSITÓRIO É PARA USO EXCLUSIVO PARA A MATÉRIA DE MASTERING RELATIONAL AND NON-RELATIONAL DATABASE
+
+## Professor Marcel Thomé Filho
+
 <h1 align="center">
   <img src="https://github.com/leomotalima/GS-JobFitScore-AdvancedBusiness/blob/main/Static/images/logo.png?raw=true" alt="JobFitScore Logo" width="220"/>
   <br><br>
@@ -17,7 +21,7 @@
 API RESTful desenvolvida em <b>.NET 8</b> para o cálculo de compatibilidade profissional entre candidatos e vagas, 
 utilizando análise de habilidades e requisitos com base em técnicas de <b>inteligência computacional</b>.
 
-[![Ver Demonstração](https://img.shields.io/badge/YouTube-Ver%20Demonstração-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=UPBSy_l2NPQ)
+[![Ver Demonstração](https://img.shields.io/badge/YouTube-Ver%20Integração-red?style=for-the-badge&logo=youtube)](https://youtu.be/EkkzUF8Y0Cc)
 
 ---
 
@@ -37,7 +41,7 @@ utilizando análise de habilidades e requisitos com base em técnicas de <b>inte
 | Branch | Banco de Dados
 |--------|-----|
 | **🚀 Deploy** | PostgreSQL | 
-| **💻 Main** | Oracle SQL | 
+| **💻 Main e Database** | Oracle SQL | 
 
 ---
 
@@ -235,17 +239,11 @@ ConnectionStrings__OracleConnection=User Id=${ORACLE_USER_ID};Password=${ORACLE_
 Execute os seguintes comandos no terminal:
 
 ```bash
-# Instalar Entity Framework CLI globalmente (se ainda não tiver)
-dotnet tool install --global dotnet-ef --version 8.0
-
 # Restaurar pacotes NuGet
 dotnet restore
 
 # Compilar o projeto
 dotnet build
-
-# Aplicar migrations no banco de dados
-dotnet ef database update
 ```
 
 ---
@@ -258,35 +256,7 @@ Execute a aplicação:
 dotnet run
 ```
 
-A API estará disponível em: ** [http://localhost:5142/swagger/index.html](http://localhost:5142/swagger/index.html)**
-
----
-
-## Execução Deploy
-
-
-## 🌐 URLs de Acesso ao Deploy
-
-- **API Base URL:** https://gs-jobfitscore-advancedbusiness.onrender.com
-- **Documentação Swagger:** https://gs-jobfitscore-advancedbusiness.onrender.com/swagger
-- **Health Check:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health
-- **Health Ping:** https://gs-jobfitscore-advancedbusiness.onrender.com/api/health/ping
-
-#### Conexão PostgreSQL 
-
-1. Clique no ícone do **Database Client** na barra lateral do VSCode
-2. Clique em **"Create Connection"** (ícone de +)
-3. Selecione **PostgreSQL**
-4. Preencha os dados:
-   ```
-   Host: dpg-d4fsf8je5dus739eca20-a.oregon-postgres.render.com
-   Port: 5432
-   Username: rm554874
-   Password: IAyXzKtRHCD0lkZi4EqKVQ4gge1pRKCu
-   Database: jobfitscore_dviy
-   ```
-6. Marque a opção **SSL** (obrigatório para Render)
-7. Clique em **Connect**
+A API estará disponível em: **[http://localhost:5142/swagger/index.html](http://localhost:5142/swagger/index.html)**
 
 ---
 
