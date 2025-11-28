@@ -15,7 +15,7 @@ namespace JobFitScoreAPI.Controllers.v1
 [Tags("Cursos")]
 [Produces("application/json")]
 [Consumes("application/json")]
-[Authorize]
+//[Authorize]
 public class CursoController : ControllerBase
 {
 private readonly AppDbContext _context;

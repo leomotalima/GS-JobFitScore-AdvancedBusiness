@@ -16,7 +16,7 @@ namespace JobFitScoreAPI.Controllers.v1
 [Tags("Empresas")]
 [Produces("application/json")]
 [Consumes("application/json")]
-[Authorize]
+//[Authorize]
 public class EmpresaController : ControllerBase
 {
 private readonly AppDbContext _context;
